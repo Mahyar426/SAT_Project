@@ -8,7 +8,7 @@ close all
 M=512;
 zeroM=zeros(M,M);
 oneM=eye(M,M);
-% Values for creating 8 permutation matrices
+% Table values for creating 8 permutation matrices
 theta_k=[3 0 1 2 2 3 0 1];
 phi_0M=[16 103 105 0 50 29 115 30]';
 phi_1M=[0 53 74 45 47 0 59 102]';
