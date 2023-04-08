@@ -32,7 +32,7 @@ G=[eye(K*M,K*M) W];
 G=G(1:end,1:4*M);
 
 %% Monte Carlo simulation
-
+rr=5;
 
 
 
