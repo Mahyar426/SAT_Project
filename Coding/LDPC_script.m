@@ -32,6 +32,12 @@ G=[eye(K*M,K*M) W];
 G=G(1:end,1:4*M);
 
 %% Monte Carlo simulation
+% Proof that the encoding process is systematic
+info_vector=randi([0,1],1024,1)';
+coded_vector=mod(info_vector*G,2);
 
+
+% Software decoders must perform the computations for each variable node
+% and check node serially
 
 
