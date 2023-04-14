@@ -32,12 +32,15 @@ G=[eye(K*M,K*M) W];
 G=G(1:end,1:4*M);
 
 %% Monte Carlo simulation
-% Proof that the encoding process is systematic
+% Proof that the encoding process is systematic -> check with isequal()
 info_vector=randi([0,1],1024,1)';
 coded_vector=mod(info_vector*G,2);
 
 
 % Software decoders must perform the computations for each variable node
-% and check node serially
+% and check node serially. The decoding to be applied is a iterative
+% soft-decoding type, so it shall works with real numbers received after 
+% the transmission over a AWGN channel. A Log Likelihood ratio of a
+% probability distribution must be sent to each check node.
 
 
