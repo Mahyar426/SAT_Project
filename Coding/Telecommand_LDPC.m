@@ -14,23 +14,25 @@ sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 info_vector=randi([0 1],k,1)';
 coded_vector=mod(info_vector*G,2);
 
+%% Modulation block
 SymbolsI = 2*coded_vector(1:2:end)-1;                    % in phase symbols
-SymbolsQ = 2*coded_vector(2:2:end)-1;                    % quadrature symbol
+SymbolsQ = 2*coded_vector(2:2:end)-1;                    % quadrature symbols
 Symbols = SymbolsI+1i.*SymbolsQ;
+
+%% Channel block
 noiseI=sigma(1)*randn(1,64);
 noiseQ=sigma(1)*randn(1,64);
-receivedSymbols=SymbolsI+noiseI+1i*(SymbolsQ+noiseQ);
+receivedSymbols=(SymbolsI+noiseI)+1i*(SymbolsQ+noiseQ);
 receivedCodewordsReal=real(receivedSymbols);
 receivedCodewordsImag=imag(receivedSymbols);
-
 receivedCodewords=zeros(1,128);
 receivedCodewords(1:2:end)=receivedCodewordsReal;
 receivedCodewords(2:2:end)=receivedCodewordsImag;
 
-%% NMS iterative decoding
+%% NMS iterative decoding init
 zeroVector=zeros(1,128);
 nIter=0;
-nIterMax=100;
+nIterMax=1000;
 nWrongCodewords=100;
 alpha=0.8;
 y=receivedCodewords>0;
@@ -90,7 +92,8 @@ for i=1:size(H,1)
     checkNodes(i).connToVariableNodes=nonzeros(IndexCheckNodes(i,:))';
 end
 
-%% Start the NMS iterative decoding
+%% NMS iterative decoding main loop
+omega=zeros(1,128);
 while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
     % Variable update rule
     for i=1:size(H,2)
@@ -110,10 +113,10 @@ while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
     for i=1:size(H,1)
         for j=1:length(checkNodes(i).connToVariableNodes)
             signProd=1;
-            minA=inf;
+            minA=1e7;
             for z=1:length(checkNodes(i).connToVariableNodes)
                 if z~=j
-                    var=variableNodes(checkNodes(i).connToVariableNodes).numValue(z);
+                    var=variableNodes(checkNodes(i).connToVariableNodes(z)).numValue;
                     minA=min(minA,abs(var));
                     signProd=sign(var)*signProd;
                 end
@@ -122,7 +125,19 @@ while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
         end
     end
     % Compute a-posteriori probability and update y
-
+    for i=1:size(H,2)
+        SumB=0;
+        for kk=1:length(variableNodes(i).connToCheckNodes)
+            for jj=1:length(checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes)
+                if checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes(jj)==i
+                    SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(kk)).numValue(jj);
+                end
+            end
+        end
+        omega(i)=variableNodes(i).numValue+SumB;
+    end
     % Check syndrone again
-   nIter=nIter+1;
+    y=omega>0;
+    syndrone=mod(y*H',2); 
+    nIter=nIter+1;
 end
