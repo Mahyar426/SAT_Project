@@ -5,12 +5,13 @@ clear
 close all
 
 load 128_64_LDPCcode.mat
-Eb_No=0:1:4;
-Eb_No_linear=10.^(Eb_No./10);
 k=64;
 n=128;
+Eb_No=0:1:4;
+Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 
+%% Bits generation+encoding
 info_vector=randi([0 1],k,1)';
 coded_vector=mod(info_vector*G,2);
 
@@ -32,7 +33,7 @@ receivedCodewords(2:2:end)=receivedCodewordsImag;
 %% NMS iterative decoding init
 zeroVector=zeros(1,128);
 nIter=0;
-nIterMax=1000;
+nIterMax=100;
 nWrongCodewords=100;
 alpha=0.8;
 y=receivedCodewords>0;
@@ -95,20 +96,6 @@ end
 %% NMS iterative decoding main loop
 omega=zeros(1,128);
 while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
-    % Variable update rule
-    for i=1:size(H,2)
-        SumB=0;
-        for kk=1:length(variableNodes(i).connToCheckNodes)
-            if variableNodes(i).connToCheckNodes(kk)~=i
-                for jj=1:length(checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes)
-                    if checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes(jj)==i
-                        SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(kk)).numValue(jj);
-                    end
-                end
-            end
-        end
-        variableNodes(i).numValue=alpha*variableNodes(i).numValue+alpha*SumB;
-    end
     % Check node update rule
     for i=1:size(H,1)
         for j=1:length(checkNodes(i).connToVariableNodes)
@@ -124,7 +111,21 @@ while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
             checkNodes(i).numValue(j)=alpha*signProd*minA;
         end
     end
-    % Compute a-posteriori probability and update y
+    % Variable update rule
+    for i=1:size(H,2)
+        SumB=0;
+        for kk=1:length(variableNodes(i).connToCheckNodes)
+            if variableNodes(i).connToCheckNodes(kk)~=i
+                for jj=1:length(checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes)
+                    if checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes(jj)==i
+                        SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(kk)).numValue(jj);
+                    end
+                end
+            end
+        end
+        variableNodes(i).numValue=alpha*variableNodes(i).numValue+alpha*SumB;
+    end
+    % Compute a-posteriori probability
     for i=1:size(H,2)
         SumB=0;
         for kk=1:length(variableNodes(i).connToCheckNodes)
@@ -136,7 +137,7 @@ while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
         end
         omega(i)=variableNodes(i).numValue+SumB;
     end
-    % Check syndrone again
+    % Update y and check the syndrone again
     y=omega>0;
     syndrone=mod(y*H',2); 
     nIter=nIter+1;

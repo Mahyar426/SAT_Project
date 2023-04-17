@@ -5,12 +5,13 @@ clear
 close all
 
 load 128_64_LDPCcode.mat
-Eb_No=0:1:4;
-Eb_No_linear=10.^(Eb_No./10);
 k=64;
 n=128;
+Eb_No=0:1:4;
+Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 
+%% Bits generation+encoding
 info_vector=randi([0 1],k,1)';
 coded_vector=mod(info_vector*G,2);
 
@@ -91,7 +92,7 @@ for i=1:size(H,1)
     checkNodes(i).numValue=zeros(1,CheckNodes(i));
     checkNodes(i).connToVariableNodes=nonzeros(IndexCheckNodes(i,:))';
 end
-return
+
 %% NMS iterative decoding main loop
 omega=zeros(1,128);
 while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
@@ -113,10 +114,10 @@ while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
     for i=1:size(H,1)
         for j=1:length(checkNodes(i).connToVariableNodes)
             signProd=1;
-            minA=inf;
+            minA=1e7;
             for z=1:length(checkNodes(i).connToVariableNodes)
                 if z~=j
-                    var=variableNodes(checkNodes(i).connToVariableNodes).numValue(z);
+                    var=variableNodes(checkNodes(i).connToVariableNodes(z)).numValue;
                     minA=min(minA,abs(var));
                     signProd=sign(var)*signProd;
                 end
@@ -138,7 +139,6 @@ while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
     end
     % Check syndrone again
     y=omega>0;
-    syndrone=mod(y*H',2);
-    if 
-   nIter=nIter+1;
+    syndrone=mod(y*H',2); 
+    nIter=nIter+1;
 end
