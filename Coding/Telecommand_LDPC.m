@@ -21,17 +21,17 @@ SymbolsQ = 2*coded_vector(2:2:end)-1;                    % quadrature symbols
 Symbols = SymbolsI+1i.*SymbolsQ;
 
 %% Channel block
-noiseI=sigma(1)*randn(1,64);
-noiseQ=sigma(1)*randn(1,64);
+noiseI=sigma(3)*randn(1,size(H,1));
+noiseQ=sigma(3)*randn(1,size(H,1));
 receivedSymbols=(SymbolsI+noiseI)+1i*(SymbolsQ+noiseQ);
 receivedCodewordsReal=real(receivedSymbols);
 receivedCodewordsImag=imag(receivedSymbols);
-receivedCodewords=zeros(1,128);
+receivedCodewords=zeros(1,size(H,2));
 receivedCodewords(1:2:end)=receivedCodewordsReal;
 receivedCodewords(2:2:end)=receivedCodewordsImag;
 
 %% NMS iterative decoding init
-zeroVector=zeros(1,128);
+zeroVector=zeros(1,size(H,1));
 nIter=0;
 nIterMax=100;
 nWrongCodewords=100;
@@ -40,7 +40,7 @@ y=receivedCodewords>0;
 syndrone=mod(y*H',2);
 if ~isequal(syndrone,zeroVector)
     nIter=1;
-    LLR=2*receivedCodewords./sigma(1)^2;
+    LLR=2*receivedCodewords./sigma(3)^2;
 end
 
 %% Tanner graph construction
@@ -94,7 +94,7 @@ for i=1:size(H,1)
 end
 
 %% NMS iterative decoding main loop
-omega=zeros(1,128);
+omega=zeros(1,size(H,2));
 while nIter<=nIterMax && ~isequal(syndrone,zeroVector)
     % Check node update rule
     for i=1:size(H,1)
