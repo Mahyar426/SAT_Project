@@ -45,22 +45,22 @@ end
 
 %% Tanner graph construction
 A=full(H);
-VariableNodes=zeros(1,size(H,2));
-CheckNodes=zeros(1,size(H,1));
+numVariableNodes=zeros(1,size(H,2));
+numCheckNodes=zeros(1,size(H,1));
 % Counting number of connections between check nodes and variable nodes
 for i=1:size(H,1)
     for j=1:size(H,2)
          if A(i,j)==1
-                VariableNodes(j)=VariableNodes(j)+1;
-                CheckNodes(i)=CheckNodes(i)+1;
+                numVariableNodes(j)=numVariableNodes(j)+1;
+                numCheckNodes(i)=numCheckNodes(i)+1;
          end
     end
 end
 % Finding the maximum value of connections possible
-MaxVariableNodes=max(max(VariableNodes));
-MaxCheckNodes=max(max(CheckNodes));
-% Finding the indexes for both check and variable nodes 
-% connections in the H matrix
+MaxVariableNodes=max(max(numVariableNodes));
+MaxCheckNodes=max(max(numCheckNodes));
+% Finding the indexes of the connections for both    
+% check nodes and variable nodes 
 IndexVariableNodes=zeros(size(H,2),MaxVariableNodes);
 IndexCheckNodes=zeros(size(H,1),MaxCheckNodes);
 for i=1:size(H,1)
@@ -89,7 +89,7 @@ for i=1:size(H,2)
     variableNodes(i).connToCheckNodes=nonzeros(IndexVariableNodes(i,:))';
 end
 for i=1:size(H,1)
-    checkNodes(i).numValue=zeros(1,CheckNodes(i));
+    checkNodes(i).numValue=zeros(1,numCheckNodes(i));
     checkNodes(i).connToVariableNodes=nonzeros(IndexCheckNodes(i,:))';
 end
 
