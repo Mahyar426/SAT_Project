@@ -159,6 +159,7 @@ end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
+ylim([10^(-5) 10^0])
 axx=xlabel('$E_b/N_o$');
 set(axx,'Interpreter','Latex');
 axy=ylabel('CER');
@@ -167,12 +168,10 @@ tit=title('LDPC code (128,64) - NMS iterative decoding');
 set(tit,'Interpreter','Latex');
 figure
 semilogy(Eb_No,BER,'-sr','LineWidth',3),axis('tight'),grid on;
+ylim([10^(-6) 10^0]);
 axx=xlabel('$E_b/N_o$');
 set(axx,'Interpreter','Latex');
 axy=ylabel('BER');
 set(axy,'Interpreter','Latex');
 tit=title('LDPC code (128,64) - NMS iterative decoding');
 set(tit,'Interpreter','Latex');
-
-
-
