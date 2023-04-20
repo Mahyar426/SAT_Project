@@ -8,12 +8,12 @@ load 128_64_LDPCcode.mat
 %% Simulation parameters
 k=64;
 n=128;
-Eb_No=0:1:3;
+Eb_No=0:1:4;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 zeroVector=zeros(1,size(H,1));                  % syndrone check
 numIterMax=100;
-numMaxWrongCodewords=100;
+numMaxWrongRxCodewords=100;
 alpha=0.8;
 %% Values for Tanner graph
 A=full(H);
@@ -59,7 +59,7 @@ for energy=1:length(Eb_No)
     numTxInfoBits=0;
     numWrongRxCodewords=0;
     numWrongRxInfoBits=0;
-    while numWrongRxCodewords<numMaxWrongCodewords
+    while numWrongRxCodewords<numMaxWrongRxCodewords
         %% Information bits generation
         infoVector=randi([0 1],k,1)';
         %% Information bits encoding
@@ -105,7 +105,7 @@ for energy=1:length(Eb_No)
             for i=1:size(H,1)
                 for j=1:length(checkNodes(i).connToVariableNodes)
                     signProd=1;
-                    minA=Inf;
+                    minA=Inf;                    
                     for z=1:length(checkNodes(i).connToVariableNodes)
                         if z~=j
                             var=variableNodes(checkNodes(i).connToVariableNodes(z)).numValue;
@@ -119,11 +119,11 @@ for energy=1:length(Eb_No)
             % Variable update rule
             for i=1:size(H,2)
                 SumB=0;
-                for kk=1:length(variableNodes(i).connToCheckNodes)
-                    if variableNodes(i).connToCheckNodes(kk)~=i
-                        for jj=1:length(checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes)
-                            if checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes(jj)==i
-                                SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(kk)).numValue(jj);
+                for j=1:length(variableNodes(i).connToCheckNodes)
+                    if variableNodes(i).connToCheckNodes(j)~=i
+                        for z=1:length(checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes)
+                            if checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes(z)==i
+                                SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(j)).numValue(z);
                             end
                         end
                     end
@@ -133,10 +133,10 @@ for energy=1:length(Eb_No)
             % Compute a-posteriori probability
             for i=1:size(H,2)
                 SumB=0;
-                for kk=1:length(variableNodes(i).connToCheckNodes)
-                    for jj=1:length(checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes)
-                        if checkNodes(variableNodes(i).connToCheckNodes(kk)).connToVariableNodes(jj)==i
-                            SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(kk)).numValue(jj);
+                for j=1:length(variableNodes(i).connToCheckNodes)
+                    for z=1:length(checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes)
+                        if checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes(z)==i
+                            SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(j)).numValue(z);
                         end
                     end
                 end
@@ -159,8 +159,20 @@ end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
+axx=xlabel('$E_b/N_o$');
+set(axx,'Interpreter','Latex');
+axy=ylabel('CER');
+set(axy,'Interpreter','Latex');
+tit=title('LDPC code (128,64) - NMS iterative decoding');
+set(tit,'Interpreter','Latex');
 figure
 semilogy(Eb_No,BER,'-sr','LineWidth',3),axis('tight'),grid on;
+axx=xlabel('$E_b/N_o$');
+set(axx,'Interpreter','Latex');
+axy=ylabel('BER');
+set(axy,'Interpreter','Latex');
+tit=title('LDPC code (128,64) - NMS iterative decoding');
+set(tit,'Interpreter','Latex');
 
 
 
