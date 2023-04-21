@@ -59,6 +59,7 @@ for energy=1:length(Eb_No)
     numTxInfoBits=0;
     numWrongRxCodewords=0;
     numWrongRxInfoBits=0;
+    % For every energy point
     while numWrongRxCodewords<numMaxWrongRxCodewords
         %% Information bits generation
         infoVector=randi([0 1],k,1)';
@@ -85,7 +86,7 @@ for energy=1:length(Eb_No)
         % NMS starting condition
         if ~isequal(syndrone,zeroVector)
             numIter=0;
-            LLR=2*receivedCodewords./sigma(energy)^2;
+            LLR=(2*receivedCodewords)./sigma(energy)^2;
             % Tanner graph construction: creating array structures for both variable 
             % and check nodes: a field for the numerical values of their respective
             %  update rule and another field for their connection indexes
