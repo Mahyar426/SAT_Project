@@ -12,7 +12,7 @@ end
 for col = 1:size(H,2)
     Tanner_c2v{col} = (find(H(:, col)))';
 end
-
+return
 Out = (In < 0);
 sindrome = mod(H * Out, 2);   
 
@@ -42,22 +42,17 @@ if sum(sindrome)~=0
     
         end % check
 
-       
-
         for variab=1:n  
                                  
             check_to_variab_mess = Mess(Tanner_c2v{variab},variab);
-            
             Poste = LLR(variab) + sum(check_to_variab_mess);
             variab_to_check_mess = (Poste - check_to_variab_mess)*NMSfactor;           
-            Mess(Tanner_c2v{variab}, variab)   = variab_to_check_mess;   
+            Mess(Tanner_c2v{variab}, variab) = variab_to_check_mess;   
             Post(variab)=Poste;     
         end % variab
-
                 
-        Out     = double(Post < 0);
-
-        sindrome              = mod(H * Out, 2);
+        Out = double(Post < 0);
+        sindrome = mod(H * Out, 2);
     
         if sum(sindrome)==0
               break;
