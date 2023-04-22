@@ -1,4 +1,4 @@
-% Simulator for TM: LDPC channel coding
+% Simulator for TC: LDPC channel coding
 
 clc
 clear

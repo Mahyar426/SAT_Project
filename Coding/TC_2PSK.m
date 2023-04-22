@@ -1,4 +1,4 @@
-% Simulator for TM: LDPC channel coding, 2-PSK mopdulation
+% Simulator for TC: LDPC channel coding, 2-PSK mopdulation
 
 clc
 clear
@@ -74,7 +74,7 @@ if sum(syndrone)~=0
         % A-posteriori computation
         for variable=1:n
             c2vMessage=channelMessage(Tanner_c2v{variable},variable);
-            aPosterioriProb=LLR(variable)+sum(c2vMessage);
+            var=LLR(variable)+sum(c2vMessage);
             %v2cMessage=
         end
 

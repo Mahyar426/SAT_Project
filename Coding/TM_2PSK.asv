@@ -11,7 +11,7 @@ n=128;
 Eb_No=0:1:4;
 Eb_No_linear=10.^(Eb_No./10);
 numMaxWrongRxCodewords=100;
-numMaxIterNMS=100;
+numMaxIterNMS=2;
 normValueNMS=0.8;
 %% Values for Tanner graph
 % Variable nodes: inspecting H by rows
@@ -49,12 +49,41 @@ syndrone=mod(y*H',2);
 if sum(syndrone)~=0
     % Algorithm initialization
     LLR=2*codeword./(sigma^2);
-    nIter=1;
+    nIterNMS=1;
     m=n-k;
     % Initialize Tanner graph messages
     aPosterioriProb=zeros(n,1);
     channelMessage=H.*LLR;
-    while nIter
+    while nIterNMS<=numMaxIterNMS && sum(syndrone)~=0
+        % Check node update
+        for check=1:m
+            % Accessing variable node values connected to m-th check value
+            v2cMessage=channelMessage(check,Tanner_v2c{check});
+            for t=1:length(v2cMessage)
+                SignMessage=sign(v2cMessage);
+                MagnitudeMessage=abs(v2cMessage);
+                % Done to exclude t=th value
+                SignMessage(t)=1;
+                MagnitudeMessage(t)=Inf;
+                c2vMessage(t)=prod(nonzeros(full(SignMessage)))*min(nonzeros(full(MagnitudeMessage)))*normValueNMS;
+            end
+            % Updating the check node values in the matrix
+            channelMessage(check,Tanner_v2c{check})=c2vMessage;
+        end
+        % Variable node update
+        % A-posteriori computation
+        for variable=1:n
+            c2vMessage=channelMessage(Tanner_c2v{variable},variable);
+            =LLR(variable)+sum(c2vMessage);
+            %v2cMessage=
+        end
+
+
+
+        
+        % Syndrone computation
+        nIterNMS=nIterNMS+1;
+    end
     
 end
 
