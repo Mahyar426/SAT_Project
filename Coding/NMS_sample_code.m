@@ -41,7 +41,6 @@ if sum(sindrome)~=0
             Mess(check, Tanner_v2c{check}) = check_to_variab_mess;    
     
         end % check
-
         for variab=1:n  
                                  
             check_to_variab_mess = Mess(Tanner_c2v{variab},variab);

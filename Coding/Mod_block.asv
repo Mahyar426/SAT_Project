@@ -1,0 +1,34 @@
+% Modulation block
+
+clc
+clear
+close all
+load 128_64_LDPCcode.mat
+
+k=64;
+n=128;
+Eb_No=0:1:4;
+Eb_No_linear=10.^(Eb_No./10);
+sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
+spectEff=2;
+SNR=Eb_No-spectEff;
+
+infoBits=randi([0 1],k,1)';
+codedBits=mod(infoBits*G,2)';
+
+SymbolsI = 2*codedBits(1:2:end)-1;              % in phase symbols
+SymbolsQ = 2*codedBits(2:2:end)-1;              % quadrature symbols
+symbolsTx = SymbolsI+1i.*SymbolsQ;
+
+% Normalized Complex WGN generation (Noise Power set to 1)
+Noise=(randn(k,1)+1i*randn(k,1))*sigma(5);
+
+symbolsRx=symbolsTx+Noise;
+
+figure
+plot(symbolsTx,'r.',symbolsRx,);
+axis equal
+xlim([-2 2])
+ylim([-2 2])
+grid on;
+
