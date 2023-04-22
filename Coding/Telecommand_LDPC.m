@@ -64,25 +64,25 @@ for energy=1:length(Eb_No)
         infoBits=randi([0 1],k,1)';
         %% Information bits encoding
         codedBits=mod(infoBits*G,2);
-%         %% QPSK Modulation block
-%         symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
-%         symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
-%         symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
-%         %% AWGN Channel block
-%         noiseI=randn(1,size(H,1));                    % in phase noise
-%         noiseQ=randn(1,size(H,1));                    % quadrature noise
-%         noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
-%         symbolsRx=symbolsTx+noise;
-%         %% Receiver block
-%         symbolsRxReal=real(symbolsRx);
-%         symbolsRxImag=imag(symbolsRx);
-%         receivedCodeword=zeros(1,size(H,2));
-%         receivedCodeword(1:2:end)=symbolsRxReal;
-%         receivedCodeword(2:2:end)=symbolsRxImag;
-        %% BPSK modulation
-        symbols=2*codedBits-1;
-        noise=sigma(energy)*randn(1,size(H,2));
-        receivedCodeword=symbols+noise;
+        %% QPSK Modulation block
+        symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
+        symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
+        symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
+        %% AWGN Channel block
+        noiseI=randn(1,size(H,1));                    % in phase noise
+        noiseQ=randn(1,size(H,1));                    % quadrature noise
+        noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
+        symbolsRx=symbolsTx+noise;
+        %% Receiver block
+        symbolsRxReal=real(symbolsRx);
+        symbolsRxImag=imag(symbolsRx);
+        receivedCodeword=zeros(1,size(H,2));
+        receivedCodeword(1:2:end)=symbolsRxReal;
+        receivedCodeword(2:2:end)=symbolsRxImag;
+%         %% BPSK modulation
+%         symbols=2*codedBits-1;
+%         noise=sigma(energy)*randn(1,size(H,2));
+%         receivedCodeword=symbols+noise;
         %% Counters update
         numTxCodewords=numTxCodewords+1;                
         numTxInfoBits=numTxInfoBits+size(H,1);          
