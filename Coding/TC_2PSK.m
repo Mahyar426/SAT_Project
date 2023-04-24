@@ -10,6 +10,7 @@ k=64;
 n=128;
 Eb_No=0:1:4;
 Eb_No_linear=10.^(Eb_No./10);
+sigma=sqrt(2*(k/n).*Eb_No_linear);
 numMaxWrongRxCodewords=100;
 numMaxIterNMS=100;
 normValueNMS=0.8;
@@ -30,7 +31,6 @@ for energy=1:length(Eb_No)
     numTxInfoBits=0;
     numWrongRxCodewords=0;
     numWrongRxInfoBits=0;
-    sigma=sqrt(2*(k/n).*Eb_No_linear(energy));
     while numWrongRxCodewords<=numMaxWrongRxCodewords
         %% Information frame generation
         infoBits=randi([0 1],k,1)';
@@ -42,7 +42,7 @@ for energy=1:length(Eb_No)
         %% 2-PSK modulation
         symbolTx=2*codeword-1;
         %% AWGN channel
-        noise=sigma*randn(1,n);
+        noise=sigma(energy)*randn(1,n);
         symbolRx=symbolTx+noise;
         %% LDPC decoding
         % Syndrone test
@@ -51,13 +51,13 @@ for energy=1:length(Eb_No)
         % Starting condition of the NMS iterative algorithm
         if sum(syndrone)~=0
             % Algorithm initialization
-            LLR=2*symbolRx./(sigma^2);    % computed on received codeword
+            LLR=2*symbolRx./(sigma(energy)^2);    % computed on received codeword
             nIterNMS=1;
             m=n-k;
             % Initialize Tanner graph messages
             aPosterioriProb=zeros(n,1);
             channelMessage=H.*LLR;
-            while nIterNMS<=numMaxIterNMS && sum(syndrone)~=0
+            while nIterNMS<=numMaxIterNMS
                 % Check node update
                 for check=1:m
                     % Accessing variable node values connected to m-th check node
@@ -65,7 +65,7 @@ for energy=1:length(Eb_No)
                     for t=1:length(v2cMessage)
                         SignMessage=sign(v2cMessage);
                         MagnitudeMessage=abs(v2cMessage);
-                        % Done to exclude t=th value
+                        % Done to exclude t-th value
                         SignMessage(t)=1;
                         MagnitudeMessage(t)=Inf;
                         c2vMessage(t)=prod(nonzeros(full(SignMessage)))*min(nonzeros(full(MagnitudeMessage)))*normValueNMS;
@@ -89,6 +89,9 @@ for energy=1:length(Eb_No)
                 y=aPosterioriProb'>=0;
                 syndrone=mod(y*H',2);
                 nIterNMS=nIterNMS+1;
+                if sum(syndrone)==0
+                    break;
+                end
             end
         end
         % At this point it's either decoding success or failure,
