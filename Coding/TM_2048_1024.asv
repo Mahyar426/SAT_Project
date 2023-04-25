@@ -84,7 +84,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     receivedCodeword(2:2:end)=symbolsRxImag;
     %% Counters update
     numTxCodewords=numTxCodewords+1;
-    numTxInfoBits=numTxInfoBits+k;
+    numTxInfoBits=numTxInfoBits+size(H,1);
     %% NMS iterative decoding block
     y=receivedCodeword>0;
     syndrone=mod(y*H',2);
@@ -163,7 +163,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     %% Error rate computation block
     if ~isequal(codedBits,y)
         numWrongRxCodewords=numWrongRxCodewords+1;
-        numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
+        numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:64)));
     end
 end
 CER(energy)=numWrongRxCodewords/numTxCodewords;

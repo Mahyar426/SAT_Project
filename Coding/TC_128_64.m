@@ -1,8 +1,8 @@
+% Simulator for TC: LDPC channel coding
 clc
 clear
 close all
 load 128_64_LDPCcode.mat
-% Simulator for TC: LDPC channel coding
 %% Simulation parameters
 tic;
 k=64;
