@@ -56,7 +56,8 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-for energy=1:length(Eb_No)
+% for energy=1:length(Eb_No)
+energy=5;
 numTxCodewords=0;
 numTxInfoBits=0;
 numWrongRxCodewords=0;
@@ -107,7 +108,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         omega=zeros(1,size(H,2));
         while numIter<numIterMax
             % Check Node Update Rule
-            for check = 1 : size(H,1) % Going through each check node
+            for check = 1 : size(H,1) % Going through each check node 
                 for h = 1 : length(checkNodes(check).connToVariableNodes)
                     SignProd=1;
                     MinA=Inf;
@@ -168,7 +169,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
 end
 CER(energy)=numWrongRxCodewords/numTxCodewords;
 BER(energy)=numWrongRxInfoBits/numTxInfoBits;
-end
+% end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;

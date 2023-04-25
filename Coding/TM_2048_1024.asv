@@ -56,7 +56,8 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-for energy=1:length(Eb_No)
+% for energy=1:length(Eb_No)
+energy=5;
 numTxCodewords=0;
 numTxInfoBits=0;
 numWrongRxCodewords=0;
@@ -84,7 +85,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     receivedCodeword(2:2:end)=symbolsRxImag;
     %% Counters update
     numTxCodewords=numTxCodewords+1;
-    numTxInfoBits=numTxInfoBits+size(H,1);
+    numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
     y=receivedCodeword>0;
     syndrone=mod(y*H',2);
@@ -163,12 +164,12 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     %% Error rate computation block
     if ~isequal(codedBits,y)
         numWrongRxCodewords=numWrongRxCodewords+1;
-        numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:64)));
+        numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
     end
 end
 CER(energy)=numWrongRxCodewords/numTxCodewords;
 BER(energy)=numWrongRxInfoBits/numTxInfoBits;
-end
+% end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
