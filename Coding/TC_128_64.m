@@ -121,7 +121,6 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                     checkNodes(check).numValue(h)=alpha*MinA*SignProd;
                 end
             end
-
             % A-Posteriori Update Rule
             for variable = 1 : n % Going through each variable node
                 SumB=0;
