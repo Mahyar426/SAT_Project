@@ -7,7 +7,7 @@ load 128_64_LDPCcode.mat
 
 k=64;
 n=128;
-Eb_No=0:1:20;
+Eb_No=0:1:4;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 spectEff=2;
