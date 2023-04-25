@@ -1,11 +1,10 @@
 % Simulator for TC: LDPC channel coding
-
 clc
 clear
 close all
 load 128_64_LDPCcode.mat
-
 %% Simulation parameters
+tic;
 k=64;
 n=128;
 Eb_No=0:1:4;
@@ -21,17 +20,17 @@ numCheckNodes=zeros(1,size(H,1));
 % Counting number of connections between check nodes and variable nodes
 for i=1:size(H,1)
     for j=1:size(H,2)
-         if A(i,j)==1
-                numVariableNodes(j)=numVariableNodes(j)+1;
-                numCheckNodes(i)=numCheckNodes(i)+1;
-         end
+        if A(i,j)==1
+            numVariableNodes(j)=numVariableNodes(j)+1;
+            numCheckNodes(i)=numCheckNodes(i)+1;
+        end
     end
 end
 % Finding the maximum value of connections possible
 MaxVariableNodes=max(max(numVariableNodes));
 MaxCheckNodes=max(max(numCheckNodes));
-% Finding the indexes of the connections for both    
-% check nodes and variable nodes 
+% Finding the indexes of the connections for both
+% check nodes and variable nodes
 IndexVariableNodes=zeros(size(H,2),MaxVariableNodes);
 IndexCheckNodes=zeros(size(H,1),MaxCheckNodes);
 for i=1:size(H,1)
@@ -52,9 +51,8 @@ for j=1:size(H,2)
         end
     end
 end
-energy=5;
 %% Monte-Carlo simulation
-% for energy=1:length(Eb_No)
+for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
 numWrongRxCodewords=0;
@@ -80,13 +78,9 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     receivedCodeword=zeros(1,size(H,2));
     receivedCodeword(1:2:end)=symbolsRxReal;
     receivedCodeword(2:2:end)=symbolsRxImag;
-%   %% BPSK modulation
-%   symbols=2*codedBits-1;
-%   noise=sigma(energy)*randn(1,size(H,2));
-%   receivedCodeword=symbols+noise;
     %% Counters update
-    numTxCodewords=numTxCodewords+1;                
-    numTxInfoBits=numTxInfoBits+size(H,1);          
+    numTxCodewords=numTxCodewords+1;
+    numTxInfoBits=numTxInfoBits+size(H,1);
     %% NMS iterative decoding block
     y=receivedCodeword>0;
     syndrone=mod(y*H',2);
@@ -94,11 +88,11 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     if sum(syndrone)~=0
         numIter=0;
         LLR=(2*receivedCodeword)./sigma(energy)^2;
-        % Tanner graph construction-> creating array structures for both variable 
+        % Tanner graph construction-> creating array structures for both variable
         % and check nodes: a field for the numerical values of their respective
         %  update rule and another field for their connection indexes
         for i=1:size(H,2)
-            variableNodes(i).numValue=LLR(i);
+            variableNodes(i).numValue=ones(1,numVariableNodes(i))*LLR(i);
             variableNodes(i).connToCheckNodes=nonzeros(IndexVariableNodes(i,:))';
         end
         for i=1:size(H,1)
@@ -107,51 +101,56 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
         % NMS main loop
         omega=zeros(1,size(H,2));
-        while numIter<=numIterMax
-            % Check node update rule
-            for i=1:size(H,1)
-                for j=1:length(checkNodes(i).connToVariableNodes)
-                    signProd=1;
-                    minA=Inf;                    
-                    for z=1:length(checkNodes(i).connToVariableNodes)
-                        if z~=j
-                            var=variableNodes(checkNodes(i).connToVariableNodes(z)).numValue;
-                            minA=min(minA,abs(var));
-                            signProd=sign(var)*signProd;
-                        end
-                    end
-                    checkNodes(i).numValue(j)=alpha*signProd*minA;
-                end
-            end
-            % Variable update rule
-            for i=1:size(H,2)
-                SumB=0;
-                for j=1:length(variableNodes(i).connToCheckNodes)
-                    if variableNodes(i).connToCheckNodes(j)~=variableNodes(i).connToCheckNodes(j)
-                        for z=1:length(checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes)
-                            if checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes(z)==i
-                                SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(j)).numValue(z);
+        while numIter<numIterMax
+            % Check Node Update Rule
+            for check = 1 : k
+                for h = 1 : length(checkNodes(check).connToVariableNodes)
+                    SignProd=1;
+                    MinA=Inf;
+                    for h_excluded = 1 : length(checkNodes(check).connToVariableNodes)
+                        if h_excluded~=h
+                            for a = 1 : length(variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes)
+                                if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
+                                    var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
+                                    MinA=min(MinA,abs(var));
+                                    SignProd=sign(var)*SignProd;
+                                end
                             end
                         end
                     end
+                    checkNodes(check).numValue(h)=alpha*MinA*SignProd;
                 end
-                variableNodes(i).numValue=alpha*LLR(i)+alpha*SumB;
             end
-            % Compute a-posteriori probability
-            for i=1:size(H,2)
+
+            % A-Posteriori Update Rule
+            for variable = 1 : n % Going through each variable node
                 SumB=0;
-                for j=1:length(variableNodes(i).connToCheckNodes)
-                    for z=1:length(checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes)
-                        if checkNodes(variableNodes(i).connToCheckNodes(j)).connToVariableNodes(z)==i
-                            SumB=SumB+checkNodes(variableNodes(i).connToCheckNodes(j)).numValue(z);
+                for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
+                    for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
+                        if checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes(b)==variable % Checking that if we are picking the corresponding check node value for that specific variable node
+                            SumB=SumB+checkNodes(variableNodes(variable).connToCheckNodes(h)).numValue(b);
                         end
                     end
                 end
-                omega(i)=LLR(i)+SumB;
+                SumB_Omega=SumB;
+                % Variable Node Update Rule
+                for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
+                    for h_excluded = 1 : length(variableNodes(variable).connToCheckNodes) % Condition for excluding that check node
+                        if h_excluded==h % To choose the check node that we are extracting
+                            for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
+                                if (checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes(b))==variable % To check if we pick the right value for the connection between the current check node and the specific variable node
+                                    SumB_excluded=SumB_Omega-checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).numValue(b);
+                                end
+                            end
+                        end
+                    end
+                    variableNodes(variable).numValue(h)=alpha*(LLR(variable)+SumB_excluded);
+                end
+                omega(variable)=LLR(variable)+SumB_Omega;
             end
             % Update y and check the syndrone again
             y=omega>=0;
-            syndrone=mod(y*H',2); 
+            syndrone=mod(y*H',2);
             numIter=numIter+1;
             if sum(syndrone)==0
                 break;
@@ -164,11 +163,10 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:64)));
     end
 end
-CER=numWrongRxCodewords/numTxCodewords;
-BER=numWrongRxInfoBits/numTxInfoBits;
-% end
+CER(energy)=numWrongRxCodewords/numTxCodewords;
+BER(energy)=numWrongRxInfoBits/numTxInfoBits;
+end
 %% Plotting CER and BER performance
-return
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
 ylim([10^(-5) 10^0])
@@ -191,3 +189,4 @@ tit=title('LDPC code (128,64) - NMS iterative decoding');
 set(tit,'Interpreter','Latex');
 leg=legend('BER');
 set(leg,'Interpreter','Latex');
+toc;
