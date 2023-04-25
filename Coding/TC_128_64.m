@@ -7,6 +7,7 @@ load 128_64_LDPCcode.mat
 tic;
 k=64;
 n=128;
+m=n-k;
 Eb_No=0:1:4;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
@@ -103,7 +104,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         omega=zeros(1,size(H,2));
         while numIter<numIterMax
             % Check Node Update Rule
-            for check = 1 : k
+            for check = 1 : m
                 for h = 1 : length(checkNodes(check).connToVariableNodes)
                     SignProd=1;
                     MinA=Inf;
