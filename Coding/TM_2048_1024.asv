@@ -68,7 +68,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     %% Information bits encoding
     codedBits=mod(infoBits*G,2);
     %% QPSK Modulation block
-    symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols    
+    symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
     symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
     %% AWGN Channel block
@@ -96,8 +96,11 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         % and check nodes: a field for the numerical values of their respective
         %  update rule and another field for their connection indexes
         for i=1:size(H,2)
-            if i>k && i<153
-            variableNodes(i).numValue=ones(1,numVariableNodes(i))*LLR(i); % non-punctured symbols
+            if i>k && i<1537
+                variableNodes(i).numValue=ones(1,numVariableNodes(i)); % special symbols
+            else
+                variableNodes(i).numValue=ones(1,numVariableNodes(i))*LLR(i); % non-punctured symbols
+            end
             variableNodes(i).connToCheckNodes=nonzeros(IndexVariableNodes(i,:))';
         end
         for i=1:size(H,1)
@@ -110,20 +113,26 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             % Check Node Update Rule
             for check = 1 : size(H,1)
                 for h = 1 : length(checkNodes(check).connToVariableNodes)
-                    SignProd=1;
-                    MinA=Inf;
-                    for h_excluded = 1 : length(checkNodes(check).connToVariableNodes)
-                        if h_excluded~=h
-                            for a = 1 : length(variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes)
-                                if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
-                                    var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
-                                    MinA=min(MinA,abs(var));
-                                    SignProd=sign(var)*SignProd;
+                        SignProd=1;
+                        MinA=Inf;
+                        for h_excluded = 1 : length(checkNodes(check).connToVariableNodes)
+                            if h_excluded~=h
+                                for a = 1 : length(variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes)
+                                    if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
+                                        var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
+                                        if length(checkNodes(check).connToVariableNodes)>1
+                                        MinA=min(MinA,abs(var));
+                                        SignProd=sign(var)*SignProd;
+                                        end
+                                        if length(checkNodes(check).connToVariableNodes)>1
+                                        MinA=abs(var);
+                                        SignProd=1;
+                                        end
+                                    end
                                 end
                             end
                         end
-                    end
-                    checkNodes(check).numValue(h)=alpha*MinA*SignProd;
+                        checkNodes(check).numValue(h)=alpha*MinA*SignProd;
                 end
             end
             % A-Posteriori Update Rule
@@ -140,7 +149,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 % Variable Node Update Rule
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
                     for h_excluded = 1 : length(variableNodes(variable).connToCheckNodes) % Condition for excluding that check node
-                        if h_excluded==h % To choose the check node that we are extracting
+                        if h_excluded==h && (length(variableNodes(variable).connToCheckNodes)>1) % To choose the check node that we are extracting
                             for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
                                 if (checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes(b))==variable % To check if we pick the right value for the connection between the current check node and the specific variable node
                                     SumB_excluded=SumB_Omega-checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).numValue(b);
@@ -155,7 +164,6 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             % Update y and check the syndrone again
             y=omega>0;
             syndrone=mod(y*H',2);
-            return
             numIter=numIter+1;
             if sum(syndrone)==0
                 break;
