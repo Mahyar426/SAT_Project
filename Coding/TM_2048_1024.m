@@ -10,9 +10,10 @@ n=2048;
 Eb_No=0:0.5:2.5;            % Energy values under analysis in TM Green Book
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
-numIterMax=100;
-numMaxWrongRxCodewords=100;
+numIterMax=10;
+numMaxWrongRxCodewords=10;
 alpha=0.8;
+%% Puncturing matrices' last M symbols
 M=length(punc);
 G=G(1:end,1:4*M);
 H=H(1:end,1:4*M);
@@ -55,7 +56,7 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-energy=2;
+energy=6;
 % for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -105,7 +106,6 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
         % NMS main loop
         omega=zeros(1,size(G,2));
-        return
         while numIter<numIterMax
             % Check Node Update Rule
             for check = 1 : size(H,1)
@@ -127,7 +127,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                     end
                     if length(checkNodes(check).connToVariableNodes)==1
                         MinA=variableNodes(checkNodes(check).connToVariableNodes(1)).numValue(1);
-                        SignProd=1;
+                        SignProd=sign(MinA)*SignProd;
                     end
                     checkNodes(check).numValue(h)=alpha*MinA*SignProd;
                 end
@@ -160,6 +160,8 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             end
             % Update y and check the syndrone again
             y=omega>0;
+            display(sum(xor(infoBits,y(1:1024))))
+            return
             syndrone=mod(y*H',2);
             numIter=numIter+1;
             if sum(syndrone)==0
@@ -173,9 +175,12 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:1024)));
     end
 end
-CER(energy)=numWrongRxCodewords/numTxCodewords;
-BER(energy)=numWrongRxInfoBits/numTxInfoBits;
+% CER(energy)=numWrongRxCodewords/numTxCodewords;
+% BER(energy)=numWrongRxInfoBits/numTxInfoBits;
+CER=numWrongRxCodewords/numTxCodewords;
+BER=numWrongRxInfoBits/numTxInfoBits;
 % end
+return
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
