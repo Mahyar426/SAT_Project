@@ -10,8 +10,8 @@ n=2048;
 Eb_No=0:0.5:2.5;            % Energy values under analysis in TM Green Book
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
-numIterMax=50;
-numMaxWrongRxCodewords=10;
+numIterMax=100;
+numMaxWrongRxCodewords=100;
 alpha=0.8;
 %% Values for Tanner graph
 A=full(H);
@@ -52,7 +52,7 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-energy=4;
+energy=3;
 % for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -64,32 +64,34 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     infoBits=randi([0 1],k,1)';
     %% Information bits encoding
     codedBits=mod(infoBits*G,2);
+    codedBits=codedBits(1:n);
     %% QPSK Modulation block
     symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
     symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
     %% AWGN Channel block
-    noiseI=randn(1,size(G,2)/2);                  % in phase noise
-    noiseQ=randn(1,size(G,2)/2);                  % quadrature noise
+    noiseI=randn(1,k);                            % in phase noise
+    noiseQ=randn(1,k);                            % quadrature noise
     noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
     symbolsRx=symbolsTx+noise;
     %% Receiver block
     symbolsRxReal=real(symbolsRx);
     symbolsRxImag=imag(symbolsRx);
-    receivedCodeword=zeros(1,size(G,2));
+    receivedCodeword=zeros(1,n);
     receivedCodeword(1:2:end)=symbolsRxReal;
     receivedCodeword(2:2:end)=symbolsRxImag;
     %% Counters update
     numTxCodewords=numTxCodewords+1;
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
-    y=receivedCodeword>0;
+    M=length(punc);
+    receivedCodewordNMS=[receivedCodeword zeros(1,M)]; % Adding M zeros for punctured symbols
+    y=receivedCodewordNMS>0;
     syndrone=mod(y*H',2);
     % NMS starting condition
     if sum(syndrone)~=0
         numIter=0;
-        LLR=(2*receivedCodeword)./sigma(energy)^2;
-        LLR(2049:2560)=0;
+        LLR=(2*receivedCodewordNMS)./sigma(energy)^2;
         % Tanner graph construction-> creating array structures for both variable
         % and check nodes: a field for the numerical values of their respective
         %  update rule and another field for their connection indexes
@@ -102,10 +104,10 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             checkNodes(i).connToVariableNodes=nonzeros(IndexCheckNodes(i,:))';
         end
         % NMS main loop
-        omega=zeros(1,size(G,2));
+        omega=zeros(1,size(H,2));
         while numIter<numIterMax
             % Check Node Update Rule
-            for check = 1 : size(H,1)
+            for check = 1 : k
                 for h = 1 : length(checkNodes(check).connToVariableNodes)
                     SignProd=1;
                     MinA=Inf;
@@ -124,7 +126,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 end
             end
             % A-Posteriori Update Rule
-            for variable = 1 : size(H,2) % Going through each variable node
+            for variable = 1 : n % Going through each variable node
                 SumB=0;
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
                     for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
@@ -159,14 +161,15 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
     end
     %% Error rate computation block
-    if ~isequal(codedBits(1,1:n),y(1,1:n))
+    if ~isequal(codedBits,y(1:n)) % Check between the original codeword of length 'n' and y without punctured bits
         numWrongRxCodewords=numWrongRxCodewords+1;
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
     end
 end
-CER(energy)=numWrongRxCodewords/numTxCodewords;
-BER(energy)=numWrongRxInfoBits/numTxInfoBits;
-% end
+CER=numWrongRxCodewords/numTxCodewords;
+BER=numWrongRxInfoBits/numTxInfoBits;
+% end and add indexes to the two line before this one
+return
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
