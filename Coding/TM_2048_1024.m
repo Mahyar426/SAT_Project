@@ -10,12 +10,9 @@ n=2048;
 Eb_No=0:0.5:2.5;            % Energy values under analysis in TM Green Book
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
-numIterMax=100;
-numMaxWrongRxCodewords=100;
+numIterMax=50;
+numMaxWrongRxCodewords=10;
 alpha=0.8;
-M=length(punc);
-G=G(1:end,1:4*M);
-H=H(1:end,1:4*M);
 %% Values for Tanner graph
 A=full(H);
 numVariableNodes=zeros(1,size(H,2));
@@ -55,7 +52,7 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-energy=2;
+energy=4;
 % for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -92,11 +89,12 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     if sum(syndrone)~=0
         numIter=0;
         LLR=(2*receivedCodeword)./sigma(energy)^2;
+        LLR(2049:2560)=0;
         % Tanner graph construction-> creating array structures for both variable
         % and check nodes: a field for the numerical values of their respective
         %  update rule and another field for their connection indexes
         for i=1:size(H,2)
-            variableNodes(i).numValue=ones(1,numVariableNodes(i))*LLR(i); % non-punctured symbols
+            variableNodes(i).numValue=ones(1,numVariableNodes(i))*LLR(i);
             variableNodes(i).connToCheckNodes=nonzeros(IndexVariableNodes(i,:))';
         end
         for i=1:size(H,1)
@@ -105,35 +103,28 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
         % NMS main loop
         omega=zeros(1,size(G,2));
-        return
         while numIter<numIterMax
             % Check Node Update Rule
             for check = 1 : size(H,1)
                 for h = 1 : length(checkNodes(check).connToVariableNodes)
                     SignProd=1;
                     MinA=Inf;
-                    if length(checkNodes(check).connToVariableNodes)>1
-                        for h_excluded = 1 : length(checkNodes(check).connToVariableNodes)
-                            if h_excluded~=h
-                                for a = 1 : length(variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes)
-                                    if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
-                                        var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
-                                        MinA=min(MinA,abs(var));
-                                        SignProd=sign(var)*SignProd;
-                                    end
+                    for h_excluded = 1 : length(checkNodes(check).connToVariableNodes)
+                        if h_excluded~=h
+                            for a = 1 : length(variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes)
+                                if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
+                                    var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
+                                    MinA=min(MinA,abs(var));
+                                    SignProd=sign(var)*SignProd;
                                 end
                             end
                         end
-                    end
-                    if length(checkNodes(check).connToVariableNodes)==1
-                        MinA=variableNodes(checkNodes(check).connToVariableNodes(1)).numValue(1);
-                        SignProd=1;
                     end
                     checkNodes(check).numValue(h)=alpha*MinA*SignProd;
                 end
             end
             % A-Posteriori Update Rule
-            for variable = 1 : size(G,2) % Going through each variable node
+            for variable = 1 : size(H,2) % Going through each variable node
                 SumB=0;
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
                     for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
@@ -146,7 +137,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 % Variable Node Update Rule
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
                     for h_excluded = 1 : length(variableNodes(variable).connToCheckNodes) % Condition for excluding that check node
-                        if h_excluded==h && (length(variableNodes(variable).connToCheckNodes)>1) % To choose the check node that we are extracting
+                        if h_excluded==h % To choose the check node that we are extracting
                             for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
                                 if (checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes(b))==variable % To check if we pick the right value for the connection between the current check node and the specific variable node
                                     SumB_excluded=SumB_Omega-checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).numValue(b);
@@ -168,9 +159,9 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
     end
     %% Error rate computation block
-    if ~isequal(codedBits(1:n),y(1:n))
+    if ~isequal(codedBits(1,1:n),y(1,1:n))
         numWrongRxCodewords=numWrongRxCodewords+1;
-        numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:1024)));
+        numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
     end
 end
 CER(energy)=numWrongRxCodewords/numTxCodewords;
