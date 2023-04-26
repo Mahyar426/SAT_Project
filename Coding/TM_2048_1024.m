@@ -7,12 +7,15 @@ load AR4JA2048.mat
 tic;
 k=1024;
 n=2048;
-Eb_No=0:1:4;
+Eb_No=0:0.5:2.5;            % Energy values under analysis in TM Green Book
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 numIterMax=100;
 numMaxWrongRxCodewords=100;
 alpha=0.8;
+M=length(punc);
+G=G(1:end,1:4*M);
+H=H(1:end,1:4*M);
 %% Values for Tanner graph
 A=full(H);
 numVariableNodes=zeros(1,size(H,2));
@@ -52,7 +55,7 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-energy=5;
+energy=2;
 % for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -65,23 +68,23 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     %% Information bits encoding
     codedBits=mod(infoBits*G,2);
     %% QPSK Modulation block
-    symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
+    symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols    
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
     symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
     %% AWGN Channel block
-    noiseI=randn(1,size(H,2)/2);                    % in phase noise
-    noiseQ=randn(1,size(H,2)/2);                    % quadrature noise
+    noiseI=randn(1,size(G,2)/2);                  % in phase noise
+    noiseQ=randn(1,size(G,2)/2);                  % quadrature noise
     noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
     symbolsRx=symbolsTx+noise;
     %% Receiver block
     symbolsRxReal=real(symbolsRx);
     symbolsRxImag=imag(symbolsRx);
-    receivedCodeword=zeros(1,size(H,2));
+    receivedCodeword=zeros(1,size(G,2));
     receivedCodeword(1:2:end)=symbolsRxReal;
     receivedCodeword(2:2:end)=symbolsRxImag;
     %% Counters update
     numTxCodewords=numTxCodewords+1;
-    numTxInfoBits=numTxInfoBits+size(H,1);
+    numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
     y=receivedCodeword>0;
     syndrone=mod(y*H',2);
@@ -93,8 +96,8 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         % and check nodes: a field for the numerical values of their respective
         %  update rule and another field for their connection indexes
         for i=1:size(H,2)
-            if i>2048
-                variableNodes(i).numValue=zeros(1,numVariableNodes(i)); % punctured symbols
+            if i>k && i<1537
+                variableNodes(i).numValue=ones(1,numVariableNodes(i)); % special symbols
             else
                 variableNodes(i).numValue=ones(1,numVariableNodes(i))*LLR(i); % non-punctured symbols
             end
@@ -105,7 +108,8 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             checkNodes(i).connToVariableNodes=nonzeros(IndexCheckNodes(i,:))';
         end
         % NMS main loop
-        omega=zeros(1,size(H,2));
+        omega=zeros(1,size(G,2));
+        return
         while numIter<numIterMax
             % Check Node Update Rule
             for check = 1 : size(H,1)
@@ -127,7 +131,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 end
             end
             % A-Posteriori Update Rule
-            for variable = 1 : size(H,2) % Going through each variable node
+            for variable = 1 : size(G,2) % Going through each variable node
                 SumB=0;
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
                     for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
@@ -153,7 +157,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 omega(variable)=LLR(variable)+SumB_Omega;
             end
             % Update y and check the syndrone again
-            y=omega>=0;
+            y=omega>0;
             syndrone=mod(y*H',2);
             numIter=numIter+1;
             if sum(syndrone)==0
@@ -162,7 +166,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
     end
     %% Error rate computation block
-    if ~isequal(codedBits(1:2048),y(1:2048))
+    if ~isequal(codedBits(1:n),y(1:n))
         numWrongRxCodewords=numWrongRxCodewords+1;
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:1024)));
     end

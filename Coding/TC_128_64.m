@@ -52,7 +52,6 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-%energy=1;
 for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
