@@ -107,7 +107,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         omega=zeros(1,size(H,2));
         while numIter<numIterMax
             % Check Node Update Rule
-            for check = 1 : k
+            for check = 1 : size(H,1)
                 for h = 1 : length(checkNodes(check).connToVariableNodes)
                     SignProd=1;
                     MinA=Inf;
@@ -126,7 +126,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 end
             end
             % A-Posteriori Update Rule
-            for variable = 1 : n % Going through each variable node
+            for variable = 1 : size(H,2) % Going through each variable node
                 SumB=0;
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
                     for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
