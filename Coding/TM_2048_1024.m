@@ -10,8 +10,8 @@ n=2048;
 Eb_No=0:0.5:2.5;            % Energy values under analysis in TM Green Book
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
-numIterMax=100;
-numMaxWrongRxCodewords=100;
+numIterMax=50;
+numMaxWrongRxCodewords=10;
 alpha=0.8;
 %% Values for Tanner graph
 A=full(H);
@@ -64,20 +64,20 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     infoBits=randi([0 1],k,1)';
     %% Information bits encoding
     codedBits=mod(infoBits*G,2);
-    codedBits=codedBits(1:n);
+    %codedBits=codedBits(1:n);
     %% QPSK Modulation block
     symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
     symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
     %% AWGN Channel block
-    noiseI=randn(1,k);                            % in phase noise
-    noiseQ=randn(1,k);                            % quadrature noise
+    noiseI=randn(1,size(H,2)/2);                            % in phase noise
+    noiseQ=randn(1,size(H,2)/2);                            % quadrature noise
     noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
     symbolsRx=symbolsTx+noise;
     %% Receiver block
     symbolsRxReal=real(symbolsRx);
     symbolsRxImag=imag(symbolsRx);
-    receivedCodeword=zeros(1,n);
+    receivedCodeword=zeros(1,size(H,2));
     receivedCodeword(1:2:end)=symbolsRxReal;
     receivedCodeword(2:2:end)=symbolsRxImag;
     %% Counters update
@@ -85,7 +85,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
     M=length(punc);
-    receivedCodewordNMS=[receivedCodeword zeros(1,M)]; % Adding M zeros for punctured symbols
+    receivedCodewordNMS=[receivedCodeword(1:2048),ones(1,M)*(-1e-6)]; % Adding M zeros for punctured symbols
     y=receivedCodewordNMS>0;
     syndrone=mod(y*H',2);
     % NMS starting condition
@@ -117,7 +117,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                                 if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
                                     var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
                                     MinA=min(MinA,abs(var));
-                                    SignProd=sign(var)*SignProd;
+                                    SignProd=(2*(var>=0)-1)*SignProd;
                                 end
                             end
                         end
