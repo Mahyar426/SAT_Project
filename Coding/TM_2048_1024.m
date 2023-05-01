@@ -84,7 +84,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
     receivedCodewordNMS=receivedCodeword;                               
-    receivedCodewordNMS(2049:end)=0;         % last M punctured symbols
+    receivedCodewordNMS(2049:end)=-1e-6;         % last M punctured symbols
     y=receivedCodewordNMS>0;
     syndrone=mod(y*H',2);
     % NMS starting condition
