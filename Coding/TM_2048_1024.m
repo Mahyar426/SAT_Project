@@ -64,14 +64,13 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     infoBits=randi([0 1],k,1)';
     %% Information bits encoding
     codedBits=mod(infoBits*G,2);
-    %codedBits=codedBits(1:n);
     %% QPSK Modulation block
     symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
     symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
     %% AWGN Channel block
-    noiseI=randn(1,size(H,2)/2);                            % in phase noise
-    noiseQ=randn(1,size(H,2)/2);                            % quadrature noise
+    noiseI=randn(1,size(H,2)/2);                  % in phase noise
+    noiseQ=randn(1,size(H,2)/2);                  % quadrature noise
     noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
     symbolsRx=symbolsTx+noise;
     %% Receiver block
@@ -84,8 +83,8 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     numTxCodewords=numTxCodewords+1;
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
-    M=length(punc);
-    receivedCodewordNMS=[receivedCodeword(1:2048),ones(1,M)*(-1e-6)]; % Adding M zeros for punctured symbols
+    receivedCodewordNMS=receivedCodeword;
+    receivedCodewordNMS(2049:end)=-1e-6;
     y=receivedCodewordNMS>0;
     syndrone=mod(y*H',2);
     % NMS starting condition
@@ -117,7 +116,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                                 if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
                                     var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
                                     MinA=min(MinA,abs(var));
-                                    SignProd=(2*(var>=0)-1)*SignProd;
+                                    SignProd=sign(var)*SignProd;
                                 end
                             end
                         end
@@ -166,10 +165,9 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
     end
 end
-CER=numWrongRxCodewords/numTxCodewords;
-BER=numWrongRxInfoBits/numTxInfoBits;
-% end and add indexes to the two line before this one
-return
+CER(energy)=numWrongRxCodewords/numTxCodewords;
+BER(energy)=numWrongRxInfoBits/numTxInfoBits;
+% end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
