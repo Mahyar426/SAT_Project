@@ -83,8 +83,8 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     numTxCodewords=numTxCodewords+1;
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
-    receivedCodewordNMS=receivedCodeword;
-    receivedCodewordNMS(2049:end)=-1e-6;
+    receivedCodewordNMS=receivedCodeword;                               
+    receivedCodewordNMS(2049:end)=0;         % last M punctured symbols
     y=receivedCodewordNMS>0;
     syndrone=mod(y*H',2);
     % NMS starting condition
@@ -160,7 +160,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
         end
     end
     %% Error rate computation block
-    if ~isequal(codedBits,y(1:n)) % Check between the original codeword of length 'n' and y without punctured bits
+    if ~isequal(codedBits(1:n),y(1:n)) % Check between the original codeword of length 'n' and y without punctured bits
         numWrongRxCodewords=numWrongRxCodewords+1;
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
     end
