@@ -11,7 +11,7 @@ Eb_No=0:0.5:2.5;            % Energy values under analysis in TM Green Book
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 numIterMax=50;
-numMaxWrongRxCodewords=10;
+numMaxWrongRxCodewords=100;
 alpha=0.8;
 %% Values for Tanner graph
 A=full(H);
@@ -52,7 +52,8 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-energy=3;
+energy=4;
+cntConvNMS=0;
 % for energy=1:length(Eb_No)
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -83,14 +84,15 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     numTxCodewords=numTxCodewords+1;
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
-    receivedCodewordNMS=receivedCodeword;                               
-    receivedCodewordNMS(2049:end)=-1e-6;         % last M punctured symbols
-    y=receivedCodewordNMS>0;
+    receivedCodewordNMS=receivedCodeword;
+    receivedCodewordNMS(2049:end)=-1e-12;         % last M punctured symbols
+    y=receivedCodewordNMS>=0;
     syndrone=mod(y*H',2);
     % NMS starting condition
     if sum(syndrone)~=0
         numIter=0;
-        LLR=(2*receivedCodewordNMS)./sigma(energy)^2;
+%         LLR=(2*receivedCodewordNMS)./sigma(energy)^2;
+        LLR=receivedCodewordNMS;
         % Tanner graph construction-> creating array structures for both variable
         % and check nodes: a field for the numerical values of their respective
         %  update rule and another field for their connection indexes
@@ -116,7 +118,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                                 if (variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).connToCheckNodes(a))==check
                                     var=variableNodes(checkNodes(check).connToVariableNodes(h_excluded)).numValue(a);
                                     MinA=min(MinA,abs(var));
-                                    SignProd=sign(var)*SignProd;
+                                    SignProd=(2*(var>=0)-1)*SignProd;
                                 end
                             end
                         end
@@ -137,13 +139,9 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 SumB_Omega=SumB;
                 % Variable Node Update Rule
                 for h = 1 : length(variableNodes(variable).connToCheckNodes) % Accessing check nodes connected to that variable node
-                    for h_excluded = 1 : length(variableNodes(variable).connToCheckNodes) % Condition for excluding that check node
-                        if h_excluded==h % To choose the check node that we are extracting
-                            for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
-                                if (checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).connToVariableNodes(b))==variable % To check if we pick the right value for the connection between the current check node and the specific variable node
-                                    SumB_excluded=SumB_Omega-checkNodes(variableNodes(variable).connToCheckNodes(h_excluded)).numValue(b);
-                                end
-                            end
+                    for b = 1 : length(checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes) % Finding the corresponding value from that check node connected to this specific variable node
+                        if (checkNodes(variableNodes(variable).connToCheckNodes(h)).connToVariableNodes(b))==variable % To check if we pick the right value for the connection between the current check node and the specific variable node
+                            SumB_excluded=SumB_Omega-checkNodes(variableNodes(variable).connToCheckNodes(h)).numValue(b);
                         end
                     end
                     variableNodes(variable).numValue(h)=alpha*(LLR(variable)+SumB_excluded);
@@ -151,10 +149,11 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 omega(variable)=LLR(variable)+SumB_Omega;
             end
             % Update y and check the syndrone again
-            y=omega>0;
+            y=omega>=0;
             syndrone=mod(y*H',2);
             numIter=numIter+1;
             if sum(syndrone)==0
+                cntConvNMS=cntConvNMS+1;
                 break;
             end
         end
@@ -169,26 +168,26 @@ CER(energy)=numWrongRxCodewords/numTxCodewords;
 BER(energy)=numWrongRxInfoBits/numTxInfoBits;
 % end
 %% Plotting CER and BER performance
-figure
-semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
-ylim([10^(-9) 10^0])
-axx=xlabel('$E_b/N_o$');
-set(axx,'Interpreter','Latex');
-axy=ylabel('Codeword Error Rate');
-set(axy,'Interpreter','Latex');
-tit=title('LDPC code (2048,1024) - NMS iterative decoding');
-set(tit,'Interpreter','Latex');
-leg=legend('CER');
-set(leg,'Interpreter','Latex');
-figure
-semilogy(Eb_No,BER,'-sr','LineWidth',3),axis('tight'),grid on;
-ylim([10^(-10) 10^0]);
-axx=xlabel('$E_b/N_o$');
-set(axx,'Interpreter','Latex');
-axy=ylabel('Bit Error Rate');
-set(axy,'Interpreter','Latex');
-tit=title('LDPC code (2048,1024) - NMS iterative decoding');
-set(tit,'Interpreter','Latex');
-leg=legend('BER');
-set(leg,'Interpreter','Latex');
+% figure
+% semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
+% ylim([10^(-9) 10^0])
+% axx=xlabel('$E_b/N_o$');
+% set(axx,'Interpreter','Latex');
+% axy=ylabel('Codeword Error Rate');
+% set(axy,'Interpreter','Latex');
+% tit=title('LDPC code (2048,1024) - NMS iterative decoding');
+% set(tit,'Interpreter','Latex');
+% leg=legend('CER');
+% set(leg,'Interpreter','Latex');
+% figure
+% semilogy(Eb_No,BER,'-sr','LineWidth',3),axis('tight'),grid on;
+% ylim([10^(-10) 10^0]);
+% axx=xlabel('$E_b/N_o$');
+% set(axx,'Interpreter','Latex');
+% axy=ylabel('Bit Error Rate');
+% set(axy,'Interpreter','Latex');
+% tit=title('LDPC code (2048,1024) - NMS iterative decoding');
+% set(tit,'Interpreter','Latex');
+% leg=legend('BER');
+% set(leg,'Interpreter','Latex');
 toc;
