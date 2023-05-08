@@ -5,8 +5,7 @@ load AR4JA2048.mat
 %% Simulation parameters
 k=1024;
 n=2048;
-% Eb_No=0:0.5:2.5;
-Eb_No=15;
+Eb_No=0:0.5:2.5;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(2*(k/n).*Eb_No_linear);
 numMaxWrongRxCodewords=50;
@@ -20,7 +19,7 @@ for col=1:size(H,2)
     Tanner_c2v{col}=(find(H(:,col)))';
 end
 %% Monte-Carlo
-energy=1;
+energy=4;
 cntConvNMS=0;
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -58,7 +57,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     % Starting condition of the NMS iterative algorithm
     if sum(syndrone)~=0
         % Algorithm initialization
-        LLR=2*receivedCodewordNMS./(sigma(energy)^2);    % computed on received codeword
+        LLR=2*receivedCodeword./(sigma(energy)^2);    % computed on received codeword
         numIterNMS=0;
         % Initialize Tanner graph messages
         aPosterioriProb=zeros(size(H,2),1);
@@ -79,6 +78,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 channelMessage(check,Tanner_v2c{check})=varCheck;
             end
             % Variable node update rule
+
             for variable=1:v
                 varVariable=[];
                 CheckToVariableMessage=channelMessage(Tanner_c2v{variable},variable);
@@ -87,8 +87,9 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                     varVariable(t)=Omega(variable)-CheckToVariableMessage(t);
                 end
                 channelMessage(Tanner_c2v{variable},variable)=varVariable;
+
             end
-            y=Omega>=0;
+            y=(Omega>0);
             syndrone=mod(y*H',2);
             numIterNMS=numIterNMS+1;
             if sum(syndrone)==0
@@ -97,7 +98,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             end
         end
     end
-    if ~isequal(codedBits(1:n),y(1:n))
+    if ~isequal(codedBits,y)
         % Update counters for wrong Rx
         numWrongRxCodewords=numWrongRxCodewords+1;
         numWrongRxInfoBits=numWrongRxInfoBits+sum(xor(infoBits,y(1:k)));
