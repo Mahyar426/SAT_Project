@@ -10,8 +10,8 @@ n=128;
 Eb_No=0:1:4;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
-numIterMax=100;
-numMaxWrongRxCodewords=100;
+numIterMax=50;
+numMaxWrongRxCodewords=10;
 alpha=0.8;
 %% Values for Tanner graph
 A=full(H);
@@ -52,7 +52,9 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-for energy=1:length(Eb_No)
+%for energy=1:length(Eb_No)
+energy=3;
+cntConvNMS=0;
 numTxCodewords=0;
 numTxInfoBits=0;
 numWrongRxCodewords=0;
@@ -62,7 +64,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     %% Information bits generation
     infoBits=randi([0 1],k,1)';
     %% Information bits encoding
-    codedBits=mod(infoBits*G,2);
+    codedBits=mod(infoBits*G,2); 
     %% QPSK Modulation block
     symbolsI = 2*codedBits(1:2:end)-1;            % in phase symbols
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
@@ -152,6 +154,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             syndrone=mod(y*H',2);
             numIter=numIter+1;
             if sum(syndrone)==0
+                cntConvNMS=cntConvNMS+1;
                 break;
             end
         end
@@ -164,7 +167,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
 end
 CER(energy)=numWrongRxCodewords/numTxCodewords;
 BER(energy)=numWrongRxInfoBits/numTxInfoBits;
-end
+%end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
