@@ -5,12 +5,11 @@ load AR4JA2048.mat
 %% Simulation parameters
 k=1024;
 n=2048;
-% Eb_No=0:0.5:2.5;
-Eb_No=15;
+Eb_No=0:0.5:2.5;
 Eb_No_linear=10.^(Eb_No./10);
-sigma=sqrt(2*(k/n).*Eb_No_linear);
-numMaxWrongRxCodewords=50;
-numMaxIterNMS=50;
+sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
+numMaxWrongRxCodewords=100;
+numMaxIterNMS=100;
 normValueNMS=0.8;
 %% Values for Tanner graph
 for row=1:size(H,1)
@@ -20,7 +19,7 @@ for col=1:size(H,2)
     Tanner_c2v{col}=(find(H(:,col)))';
 end
 %% Monte-Carlo
-energy=1;
+energy=4;
 cntConvNMS=0;
 numTxCodewords=0;
 numTxInfoBits=0;
@@ -50,15 +49,14 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     numTxCodewords=numTxCodewords+1;
     numTxInfoBits=numTxInfoBits+k;
     %% NMS iterative decoding block
-    receivedCodewordNMS=receivedCodeword;
-    receivedCodewordNMS(2049:end)=-1e-12;         % last M punctured symbols
-    y=receivedCodewordNMS>=0;
-    y=receivedCodewordNMS>=0;
+    receivedCodewordNMS=-receivedCodeword;
+    receivedCodewordNMS(2049:end)=0;         % last M punctured symbols
+    y=receivedCodewordNMS<=0;
     syndrone=mod(y*H',2);
     % Starting condition of the NMS iterative algorithm
     if sum(syndrone)~=0
         % Algorithm initialization
-        LLR=2*receivedCodewordNMS./(sigma(energy)^2);    % computed on received codeword
+        LLR=receivedCodewordNMS;    % computed on received codeword
         numIterNMS=0;
         % Initialize Tanner graph messages
         aPosterioriProb=zeros(size(H,2),1);
@@ -70,7 +68,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 varCheck=[];
                 variableToCheckMessage=channelMessage(check,Tanner_v2c{check});
                 for t=1:length(variableToCheckMessage)
-                    Sign=sign(variableToCheckMessage);
+                    Sign=(2*(variableToCheckMessage>=0)-1);
                     Magnitude=abs(variableToCheckMessage);
                     Sign(t)=1;
                     Magnitude(t)=Inf;
@@ -88,7 +86,7 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
                 end
                 channelMessage(Tanner_c2v{variable},variable)=varVariable;
             end
-            y=Omega>=0;
+            y=Omega<=0;
             syndrone=mod(y*H',2);
             numIterNMS=numIterNMS+1;
             if sum(syndrone)==0
