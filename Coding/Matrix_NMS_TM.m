@@ -5,11 +5,12 @@ load AR4JA2048.mat
 %% Simulation parameters
 k=1024;
 n=2048;
-Eb_No=0:0.5:2.5;
+%Eb_No=0:0.5:1.5;
+Eb_No=1.5;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
 numMaxWrongRxCodewords=100;
-numMaxIterNMS=100;
+numMaxIterNMS=200;
 normValueNMS=0.8;
 %% Values for Tanner graph
 for row=1:size(H,1)
@@ -19,8 +20,7 @@ for col=1:size(H,2)
     Tanner_c2v{col}=(find(H(:,col)))';
 end
 %% Monte-Carlo
-energy=4;
-cntConvNMS=0;
+energy=1;
 numTxCodewords=0;
 numTxInfoBits=0;
 numWrongRxCodewords=0;
@@ -90,7 +90,6 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
             syndrone=mod(y*H',2);
             numIterNMS=numIterNMS+1;
             if sum(syndrone)==0
-                cntConvNMS=cntConvNMS+1;
                 break;
             end
         end

@@ -52,7 +52,6 @@ for j=1:size(H,2)
     end
 end
 %% Monte-Carlo simulation
-%cntConvNMS=0;
 for energy=1:length(Eb_No)
     numTxCodewords=0;
     numTxInfoBits=0;
@@ -151,7 +150,6 @@ for energy=1:length(Eb_No)
                 syndrone=mod(y*H',2);
                 numIter=numIter+1;
                 if sum(syndrone)==0
-                    cntConvNMS=cntConvNMS+1;
                     break;
                 end
             end
@@ -168,7 +166,7 @@ end
 %% Plotting CER and BER performance
 figure
 semilogy(Eb_No,CER,'-ob','LineWidth',3),axis('tight'),grid on;
-ylim([10^(-9) 10^0])
+%ylim([10^(-9) 10^0])
 axx=xlabel('$E_b/N_o$');
 set(axx,'Interpreter','Latex');
 axy=ylabel('Codeword Error Rate');
@@ -179,7 +177,7 @@ leg=legend('CER');
 set(leg,'Interpreter','Latex');
 figure
 semilogy(Eb_No,BER,'-sr','LineWidth',3),axis('tight'),grid on;
-ylim([10^(-10) 10^0]);
+%ylim([10^(-10) 10^0]);
 axx=xlabel('$E_b/N_o$');
 set(axx,'Interpreter','Latex');
 axy=ylabel('Bit Error Rate');
