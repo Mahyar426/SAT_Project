@@ -5,12 +5,11 @@ load AR4JA2048.mat
 %% Simulation parameters
 k=1024;
 n=2048;
-%Eb_No=0:0.5:1.5;
-Eb_No=1.5;
+Eb_No=2;
 Eb_No_linear=10.^(Eb_No./10);
 sigma=sqrt(1./(2*(k/n).*Eb_No_linear));
-numMaxWrongRxCodewords=100;
-numMaxIterNMS=200;
+numMaxWrongRxCodewords=50;
+numMaxIterNMS=50;
 normValueNMS=0.8;
 %% Values for Tanner graph
 for row=1:size(H,1)
@@ -35,8 +34,8 @@ while numWrongRxCodewords<numMaxWrongRxCodewords
     symbolsQ = 2*codedBits(2:2:end)-1;            % quadrature symbols
     symbolsTx = symbolsI+1i.*symbolsQ;            % QPSK symbols
     %% AWGN Channel block
-    noiseI=randn(1,size(H,2)/2);                    % in phase noise
-    noiseQ=randn(1,size(H,2)/2);                    % quadrature noise
+    noiseI=randn(1,size(H,2)/2);                  % in phase noise
+    noiseQ=randn(1,size(H,2)/2);                  % quadrature noise
     noise=(noiseI+1i*noiseQ)*sigma(energy);       % QPSK noise
     symbolsRx=symbolsTx+noise;
     %% Receiver block
