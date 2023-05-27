@@ -11,7 +11,6 @@ close all;
 %% Parameters
 Trunc=255;
 %% FWD COMMAND CH (I CH )--> GOLD CODES
-
 m_1=10; %COMMAND LINK PN CODE PROPERTIES pag 25 B.1
 N_1=2^m_1-1; %total numeber of codes = 2^10 = 1024
 goldSeqGen=comm.GoldSequence('FirstPolynomial','z^10 + z^7 + z^5 + z^2 + 1','SecondPolynomial','z^10 + z^9 +z^8 + z^7 +z^6 + z^5 + z^4 + z^3 + z^2 + 1', ...
@@ -49,7 +48,6 @@ x3_Quadrature_Truncated=x3_Quadrature(1:end-Trunc);
 % add the shift of 20.000 chips 
 x3_Quadrature_Truncated=circshift(x3_Quadrature_Truncated,20000); 
 
-%% comment 
 
 % n feedback channel 
 % generation of the q channel code is an indip LSFR with only 9 taps 
