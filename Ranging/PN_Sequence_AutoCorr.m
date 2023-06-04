@@ -38,15 +38,3 @@ set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
 %% Test
-R_1=ifft(fft(C1).*conj(fft(Code)));
-R_shifted_1=fftshift(R_1);
-R_final_1=abs(R_shifted_1/codeLen);
-symmInterval=round(codeLen/2);
-tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,R_final_1),axis('padded');
-axx=xlabel('Code Chips');
-set(axx,'Interpreter','Latex');
-axy=ylabel('Normalized Auto Correlation');
-set(axy,'Interpreter','Latex');
-tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
-set(tit,'Interpreter','Latex');
