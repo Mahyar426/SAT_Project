@@ -27,13 +27,13 @@ EOSat.satellite=satellite(sc,EOSat.semiMajorAxis,EOSat.eccentricity,EOSat.inclin
 EOSat.gimbal=gimbal(EOSat.satellite);
 
 % Satellite transmitter definition
-fc=8200e6;
-pTxSat=3;
-sysLSat=1;
-m=4;
-ro=0.2;
-Rbnet=512e6;
-Rcode=0.87451;
+fc=8200e6;      %%% 
+pTxSat=1.76;    %%% Tx power: 1.5 W (Enduro SAT) -> 1.76 dBW
+sysLSat=0;      %%% System loss: TO BE DETERMINED
+m=2;            %%% Modulationn chosen: QPSK
+ro=0.2;         %%% Roll-off factor of the shaping filter
+Rbnet=64e6;     %%% Target bit rate: TO BE DETERMINED
+Rcode=0.5;      %%% Code rate: 1/2
 Rs=Rbnet/(Rcode*m);
 Bandwidth=((1+ro)*Rs)/1e6; %[MHz]
 bitRate=Bandwidth; 
@@ -54,9 +54,9 @@ gimbgs1_rain=gimbal(gs1,MountingAngles=[0;180;0]);
 
 % Station receiver definition for clear sky condition
 GT_clear=25;
-sysLGS=1;
-EbNoThresholdMu=4+6; 
-Rbgross=Rbnet/Rcode;
+sysLGS=1;              %%% Ground station loss: TO BE DETERMINED
+EbNoThresholdMu=2+2; 
+Rbgross=Rbnet/Rcode;   %%% Max Rbgross: 150 Mbps
 B=Bandwidth*1e6;
 SpectEff=m*Rcode;
 thSNR=EbNoThresholdMu+SpectEff-10*log10(1+ro);
@@ -66,10 +66,10 @@ rxgs1_clear=receiver(gimbgs1_clear,Name="Inuvik RX",GainToNoiseTemperatureRatio=
 GrxGS=47.8; % Obtained from 10*log10(141.50+50)+G/T
 dishGS=3.7;
 effGS=0.65;
-Trx=141.5;
+tempRx=141.5;
 PLcfgP618=p618Config(Frequency=fc,ElevationAngle=elAngle,Latitude=68.35,Longitude=-133.72,TotalAnnualExceedance=0.1,AntennaDiameter=dishGS,AntennaEfficiency=effGS);
 [PL,~,Tsky_rain]=p618PropagationLosses(PLcfgP618);
-GT_rain=GrxGS-10*log10(Trx+Tsky_rain);
+GT_rain=GrxGS-10*log10(tempRx+Tsky_rain);
 rxgs1_rain=receiver(gimbgs1_rain,Name="Inuvik RX",GainToNoiseTemperatureRatio=GT_rain,SystemLoss=sysLGS,RequiredEbNo=thSNR,PreReceiverLoss=0);
 
 % Station antenna definition
@@ -138,7 +138,7 @@ rxgs2_clear=receiver(gimbgs2_clear,GainToNoiseTemperatureRatio=GT_clear,SystemLo
 % Station receiver definition for rain condition
 PLcfgP618=p618Config(Frequency=fc,ElevationAngle=elAngle,Latitude=78.22,Longitude=15.38,TotalAnnualExceedance=0.1,AntennaDiameter=dishGS,AntennaEfficiency=effGS);
 [PL,~,Tsky_rain]=p618PropagationLosses(PLcfgP618);
-GT_rain=GrxGS-10*log10(Trx+Tsky_rain);
+GT_rain=GrxGS-10*log10(tempRx+Tsky_rain);
 rxgs2_rain=receiver(gimbgs2_rain,GainToNoiseTemperatureRatio=GT_rain,SystemLoss=sysLGS,RequiredEbNo=thSNR,PreReceiverLoss=0);
 
 % Station antenna definition
@@ -207,7 +207,7 @@ rxgs3_clear=receiver(gimbgs3_clear,GainToNoiseTemperatureRatio=GT_clear,SystemLo
 % Station receiver definition for rain condition
 PLcfgP618=p618Config(Frequency=fc,ElevationAngle=elAngle,Latitude=-46.52,Longitude=168.48,TotalAnnualExceedance=0.1,AntennaDiameter=dishGS,AntennaEfficiency=effGS);
 [PL,~,Tsky_rain]=p618PropagationLosses(PLcfgP618);
-GT_rain=GrxGS-10*log10(Trx+Tsky_rain);
+GT_rain=GrxGS-10*log10(tempRx+Tsky_rain);
 rxgs3_rain=receiver(gimbgs3_rain,GainToNoiseTemperatureRatio=GT_rain,SystemLoss=sysLGS,RequiredEbNo=thSNR,PreReceiverLoss=0);
 
 % Station antenna definition
@@ -276,7 +276,7 @@ rxgs4_clear=receiver(gimbgs4_clear,GainToNoiseTemperatureRatio=GT_clear,SystemLo
 % Station receiver definition for rain condition
 PLcfgP618=p618Config(Frequency=fc,ElevationAngle=elAngle,Latitude=-72.01,Longitude=2.53,TotalAnnualExceedance=0.1,AntennaDiameter=dishGS,AntennaEfficiency=effGS);
 [PL,~,Tsky_rain]=p618PropagationLosses(PLcfgP618);
-GT_rain=GrxGS-10*log10(Trx+Tsky_rain);
+GT_rain=GrxGS-10*log10(tempRx+Tsky_rain);
 rxgs4_rain=receiver(gimbgs4_rain,GainToNoiseTemperatureRatio=GT_rain,SystemLoss=sysLGS,RequiredEbNo=thSNR,PreReceiverLoss=0);
 
 % Station antenna definition
