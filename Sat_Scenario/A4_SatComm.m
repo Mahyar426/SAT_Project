@@ -27,12 +27,12 @@ EOSat.satellite=satellite(sc,EOSat.semiMajorAxis,EOSat.eccentricity,EOSat.inclin
 EOSat.gimbal=gimbal(EOSat.satellite);
 
 % Satellite transmitter definition
-fc=8200e6;      %%% 
+fc=8200e6;      %%% Carrier frequency in 8 GHz - 8.4 GHz (X-band)
 pTxSat=1.76;    %%% Tx power: 1.5 W (Enduro SAT) -> 1.76 dBW
 sysLSat=0;      %%% System loss: TO BE DETERMINED
-m=2;            %%% Modulationn chosen: QPSK
+m=2;            %%% Modulation: QPSK
 ro=0.2;         %%% Roll-off factor of the shaping filter
-Rbnet=64e6;     %%% Target bit rate: TO BE DETERMINED
+Rbnet=64e6;     %%% Target bit rate: constrained by Rbgross < 150 Mbps
 Rcode=0.5;      %%% Code rate: 1/2
 Rs=Rbnet/(Rcode*m);
 Bandwidth=((1+ro)*Rs)/1e6; %[MHz]
@@ -55,7 +55,7 @@ gimbgs1_rain=gimbal(gs1,MountingAngles=[0;180;0]);
 % Station receiver definition for clear sky condition
 GT_clear=25;
 sysLGS=1;              %%% Ground station loss: TO BE DETERMINED
-EbNoThresholdMu=2+2; 
+EbNoThresholdMu=2+2;   %%% ~ 2 dB to guarantee 10^-6 (+ 2 dB margin)
 Rbgross=Rbnet/Rcode;   %%% Max Rbgross: 150 Mbps
 B=Bandwidth*1e6;
 SpectEff=m*Rcode;
