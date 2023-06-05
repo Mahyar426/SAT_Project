@@ -3,3 +3,5 @@
 clc
 clear
 close all
+
+%% Simulation parameters
