@@ -38,3 +38,26 @@ set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
 %% Test
+% C5_extended=[];
+% while length(C5_extended)<length(Code)
+%     C5_extended=[C5_extended;C5'];
+% end
+% C2_extended=[];
+% while length(C2_extended)<length(Code)
+%     C2_extended=[C2_extended,C2];
+% end
+startingPosC2=0;
+for i=1:length(Code)-length(C2)
+    if isequal(Code(i:i+length(C2)-1),C2')
+        startingPosC2=i;
+        break
+    end
+end
+CodeShifted=circshift(Code,length(Code)-startingPosC2+1);
+%% In-phase correlations
+C2_extended=[];
+while length(C2_extended)<length(Code)
+    C2_extended=[C2_extended;C2'];
+end
+InPhase1=ifft(fft(C2_extended).*conj(fft(CodeShifted)));
+valueInphase1=sum(abs(InPhase1/codeLen))
