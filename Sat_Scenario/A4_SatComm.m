@@ -29,7 +29,7 @@ EOSat.gimbal=gimbal(EOSat.satellite);
 % Satellite transmitter definition
 fc=8200e6;      %%% Carrier frequency in 8 GHz - 8.4 GHz (X-band)
 pTxSat=1.76;    %%% Tx power: 1.5 W (Enduro SAT) -> 1.76 dBW
-sysLSat=0;      %%% System loss: TO BE DETERMINED
+sysLSat=1;      %%% System loss: TO BE DETERMINED
 m=2;            %%% Modulation: QPSK
 ro=0.2;         %%% Roll-off factor of the shaping filter
 Rbnet=64e6;     %%% Target bit rate: constrained by Rbgross < 150 Mbps
