@@ -26,4 +26,19 @@ while counter<=codeLen
     C6 = circshift(C6,1);
     counter=counter+1;
 end
+discreteTimePlot=50;
+figure,stem(Code(1:discreteTimePlot)),grid on,axis('padded');
+title('T4B Pseudo-Noise sequence','Interpreter','latex');
+%% Modulate the PN sequence
+SpS=2; % related to f_chip = 2MHz?
+rectSignal=rectpulse(Code,SpS);
+figure,stem(rectSignal(1:discreteTimePlot)),grid on,axis('padded');
+title('Rectangularly-shaped signal | SpS=2;','Interpreter','latex');
+% Sinusoidal shaping and bandpass modulation
+freqCarrier=2.1e+09;
+freqSampl=5e+09;
+signalRF=modulate(rectSignal,freqCarrier,freqSampl,'am');
+figure,stem(signalRF(1:discreteTimePlot*10)),grid on,axis('padded');
+title('Modulated signal | $f_c=2.1 GHz$','Interpreter','latex');
 %% Channel model
+shiftDoppler=500e+03;
