@@ -92,7 +92,7 @@ X_hat=X_hat_tilda*Fn;
 x_hat=reshape(X_hat.',N*M,1);
 x_hat=qamdemod(x_hat,modSize,'gray','OutputType','bit');
 %% Error rate computation
-numWrognRxBits=sum(xor(x_hat,infoBits));
+numWrognRxBits=sum(xor(x_hat,infoBits))
 
 
 

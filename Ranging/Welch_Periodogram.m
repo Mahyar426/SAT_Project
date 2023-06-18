@@ -37,18 +37,18 @@ Chip_rate_Ka_Band=(l*221*f_Ka_Band)*(3599*128*2^k);
 Tc = 1/chip_rate; %0.4e6 --> 0.4 micro sec
 Tc_X=1/Chip_rate_X_Band;
 Tc_Ka=1/Chip_rate_Ka_Band;
-nsamp=4; % number of samples per symbols
+nsamp=4; % Number of samples per symbols
 nsamp_X=10;
 nsamp_Ka=10;
-analog_signal = rectpulse(Code,nsamp); % this is the analog signal
+analog_signal = rectpulse(Code,nsamp); % shaped signal
 %% Welch periodogram 
 N=length(analog_signal);
 Nwel=N/10;
-h=ones(1,Nwel); % this is the window
-Noverlap=Nwel/2; %uses NOVERLAP samples of overlap from section to section.  NOVERLAP must be an integer smaller than WINDOW if WINDOW is an integer, or smaller than the length of WINDOW if WINDOW is a vector.
+h=ones(1,Nwel);     % Use of a rectangular window
+Noverlap=Nwel/2;    % Samples of overlap
 Nfft=Nwel;
-Fs=10e6; %Fs is the sampling frequency specified in hertz.  If Fs is empty, it defaults to 1 Hz
+Fs=10e6;            % Adjust this to match frequency axis
 [Px,f]=pwelch(analog_signal,h,Noverlap,Nfft,Fs,'centered');
 figure,semilogy(f,Px),axis('tight');
 grid on
-xlabel('f'),ylabel('$$\hat{P} (f)$$','Interpreter','Latex');
+xlabel('Frequency','Interpreter','Latex'),title('$$\hat{P} (f)$$ of T4B sequence','Interpreter','Latex');
