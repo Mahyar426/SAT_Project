@@ -43,7 +43,7 @@ Nwel=N/10;          % Length of thw window
 h=ones(1,Nwel);     % Rectangular window to pre-filter
 Noverlap=Nwel/2;    % Number of overlapping samples
 Nfft=4096;          % Number of FFT points per window
-Fs=4e+06;
+Fs=8e+06;           % Chosen to properly show spectral properties
 [Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
 figure,plot(f,pow2db(Px)),axis('tight');
 grid on
@@ -59,11 +59,23 @@ signalRF=modulate(signalRect,freqCarrier,freqSampl,'am');
 figure,stem(signalRF(1:discreteTimePlot*10)),grid on,axis('padded');
 xlabel('[n]','Interpreter','latex');
 ylabel('y[n]','Interpreter','latex');
-title('Modulated signal | $f_c=2.1 GHz$','Interpreter','latex');
-% ESTIMATED PSD TO BE COMPUTED AND PLOTTED
+title('Modulated signal | $f_c = 2.1 GHz$','Interpreter','latex');
+% PSD estimation of bandpass signal
+N=length(signalRF);
+Nwel=N/10;          % Length of thw window
+h=ones(1,Nwel);     % Rectangular window to pre-filter
+Noverlap=Nwel/2;    % Number of overlapping samples
+Nfft=4096;          % Number of FFT points per window
+Fs=8.8e+09;         % Chosen to properly show spectral properties
+[Px,f]=pwelch(signalRF,h,Noverlap,Nfft,Fs,'centered');
+figure,plot(f,pow2db(Px)),axis('tight');
+grid on
+xlabel('Frequency [GHz]','Interpreter','latex');
+ylabel('Magnitude [dB]','Interpreter','latex');
+title('$\hat{P} (f)$ of modulated signal | Bandpass with $f_{carrier} = 2.1$ GHz','Interpreter','latex')
 %% Channel model: phase shift and frequency shift
-shiftDoppler=500e+03;
-shiftPhase=500;
+shiftDoppler=501e+03;
+shiftPhase=501;
 signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
 %% Receiver side: demodulate + 2D correlation
 % We demodulate at an intermediate frequency using
@@ -72,25 +84,27 @@ signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
 freqIF=1.5e+09;
 signalIF=demod(signalRx,freqCarrier,freqSampl,'am');
 % Test arrays
-shiftDopplerTestArray=0e+03:50e+03:500e+03;
-shiftPhaseTestArray=0:50:1000;
+shiftDopplerTestArray=1e+03:50e+03:951e+03;
+shiftPhaseTestArray=1:50:1000;
 % Cross-ambiguity function computation
-for i=1:length(shiftDopplerTestArray)
-    % Using a local replica to find the match
+for i=1:length(shiftPhaseTestArray)
+    % Using a local replica of the code
     replicaTest=signalRect;
-    % Modulate at a test frequency
-    freqTest=freqIF+shiftDopplerTestArray(i);
-    replicaTest=modulate(replicaTest,freqTest,freqSampl,"am");
-    for j=1:length(shiftPhaseTestArray)
-        % Apply phase shifts
-        replicaTest=circshift(replicaTest,shiftPhaseTestArray(j));
-        % Compute cross-correlation
-        crossCorr=ifft(fft(replicaTest).*conj(fft(signalIF)));
-        Z(i,j)=max(abs(crossCorr).^2)/length(signalIF);
+    % Apply test phase shifts
+    replicaTest=circshift(replicaTest,shiftPhaseTestArray(i));
+    for j=1:length(shiftDopplerTestArray)
+        % Modulate at a test frequency composed by the intermediate
+        % frequency and the test Doppler shifts
+        replicaTest=modulate(replicaTest,freqIF,freqSampl,"am");
+        replicaTest=replicaTest.*exp(2i*pi*shiftDopplerTestArray(j));
+        % Compute cross-ambiguity function
+        CAF=ifft(fft(replicaTest).*conj(fft(signalIF)));
+        squaredCAF(i,j,:)=abs(CAF).^2;
     end
 end
 %% 3D plot of the cross-ambiguity function
-[X,Y]=meshgrid(shiftDopplerTestArray,shiftPhaseTestArray);
+% [X,Y]=meshgrid(shiftDopplerTestArray,shiftPhaseTestArray);
+% figure,mesh(X,Y,Z')
 
 
 
