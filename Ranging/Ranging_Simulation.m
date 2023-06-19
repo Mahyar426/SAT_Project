@@ -31,10 +31,10 @@ figure,stem(Code(1:discreteTimePlot)),grid on,axis('padded');
 title('T4B Pseudo-Noise sequence','Interpreter','latex');
 xlabel('[n]','Interpreter','latex');
 %% Transmitter side: modulate the PN sequence
-SpS=2; % related to f_chip = 2MHz?
+SpS=4; % related to f_chip = 2MHz?
 signalRect=rectpulse(Code,SpS);
 figure,stem(signalRect(1:discreteTimePlot)),grid on,axis('padded');
-title('Rectangularly-shaped signal | SpS=2;','Interpreter','latex');
+title(['Rectangularly-shaped signal | SpS=',num2str(SpS)],'Interpreter','latex');
 xlabel('[n]','Interpreter','latex');
 ylabel('y[n]','Interpreter','latex');
 % PSD estimation of baseband signal
@@ -45,11 +45,11 @@ Noverlap=Nwel/2;    % Number of overlapping samples
 Nfft=4096;          % Number of FFT points per window
 Fs=4e+06;
 [Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
-figure,semilogy(f,Px),axis('tight');
+figure,plot(f,pow2db(Px)),axis('tight');
 grid on
 xlabel('Frequency [GHz]','Interpreter','latex');
-ylabel('$\hat{P} (f)$','Interpreter','latex');
-title('Estimated PSD of rectangularly-shaped signal | Baseband','Interpreter','latex')
+ylabel('Magnitude [dB]','Interpreter','latex');
+title('$\hat{P} (f)$ of rectangularly-shaped signal | Baseband','Interpreter','latex')
 % Sinusoidal shaping and bandpass modulation
 freqCarrier=2.1e+09;
 freqSampl=5e+09;
@@ -65,4 +65,33 @@ title('Modulated signal | $f_c=2.1 GHz$','Interpreter','latex');
 shiftDoppler=500e+03;
 shiftPhase=500;
 signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
-%% Receiver side: de-modulate signalRx and apply 2D correlation
+%% Receiver side: demodulate + 2D correlation
+% We demodulate at an intermediate frequency using
+% demod() = sinusoid multiplication at freqIF and 
+% fifth-order Butterworth lowpass filter 
+freqIF=1.5e+09;
+signalIF=demod(signalRx,freqCarrier,freqSampl,'am');
+% Test arrays
+shiftDopplerTestArray=0e+03:50e+03:500e+03;
+shiftPhaseTestArray=0:50:1000;
+% Cross-ambiguity function computation
+for i=1:length(shiftDopplerTestArray)
+    % Using a local replica to find the match
+    replicaTest=signalRect;
+    % Modulate at a test frequency
+    freqTest=freqIF+shiftDopplerTestArray(i);
+    replicaTest=modulate(replicaTest,freqTest,freqSampl,"am");
+    for j=1:length(shiftPhaseTestArray)
+        % Apply phase shifts
+        replicaTest=circshift(replicaTest,shiftPhaseTestArray(j));
+        % Compute cross-correlation
+        crossCorr=ifft(fft(replicaTest).*conj(fft(signalIF)));
+        Z(i,j)=max(abs(crossCorr).^2)/length(signalIF);
+    end
+end
+%% 3D plot of the cross-ambiguity function
+[X,Y]=meshgrid(shiftDopplerTestArray,shiftPhaseTestArray);
+
+
+
+
