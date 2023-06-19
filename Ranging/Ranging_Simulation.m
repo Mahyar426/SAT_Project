@@ -34,11 +34,27 @@ SpS=2; % related to f_chip = 2MHz?
 rectSignal=rectpulse(Code,SpS);
 figure,stem(rectSignal(1:discreteTimePlot)),grid on,axis('padded');
 title('Rectangularly-shaped signal | SpS=2;','Interpreter','latex');
+% PSD estimation of baseband signal
+N=length(rectSignal);
+Nwel=N/10;          % Length of thw window
+h=ones(1,Nwel);     % Rectangular window to pre-filter
+Noverlap=Nwel/2;    % Number of overlapping samples
+Nfft=4096;          % Number of FFT points per window
+Fs=4e+06;
+[Px,f]=pwelch(rectSignal,h,Noverlap,Nfft,Fs,'centered');
+figure,semilogy(f,Px),axis('tight');
+grid on
+xlabel('Frequency [GHz]','Interpreter','latex');
+ylabel('$\hat{P} (f)$','Interpreter','latex');
+title('Estimated PSD of rectangularly-shaped signal | Baseband','Interpreter','latex')
 % Sinusoidal shaping and bandpass modulation
 freqCarrier=2.1e+09;
 freqSampl=5e+09;
+% We use: modulate() = x.*cos(2*pi*freqCarrier*t)
+% which applies amplitude modulation at the desired frequency
 signalRF=modulate(rectSignal,freqCarrier,freqSampl,'am');
 figure,stem(signalRF(1:discreteTimePlot*10)),grid on,axis('padded');
 title('Modulated signal | $f_c=2.1 GHz$','Interpreter','latex');
+% ESTIMATED PSD TO BE COMPUTED AND PLOTTED
 %% Channel model
 shiftDoppler=500e+03;
