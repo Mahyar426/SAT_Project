@@ -29,19 +29,22 @@ end
 discreteTimePlot=50;
 figure,stem(Code(1:discreteTimePlot)),grid on,axis('padded');
 title('T4B Pseudo-Noise sequence','Interpreter','latex');
-%% Modulate the PN sequence
+xlabel('[n]','Interpreter','latex');
+%% Transmitter side: modulate the PN sequence
 SpS=2; % related to f_chip = 2MHz?
-rectSignal=rectpulse(Code,SpS);
-figure,stem(rectSignal(1:discreteTimePlot)),grid on,axis('padded');
+signalRect=rectpulse(Code,SpS);
+figure,stem(signalRect(1:discreteTimePlot)),grid on,axis('padded');
 title('Rectangularly-shaped signal | SpS=2;','Interpreter','latex');
+xlabel('[n]','Interpreter','latex');
+ylabel('y[n]','Interpreter','latex');
 % PSD estimation of baseband signal
-N=length(rectSignal);
+N=length(signalRect);
 Nwel=N/10;          % Length of thw window
 h=ones(1,Nwel);     % Rectangular window to pre-filter
 Noverlap=Nwel/2;    % Number of overlapping samples
 Nfft=4096;          % Number of FFT points per window
 Fs=4e+06;
-[Px,f]=pwelch(rectSignal,h,Noverlap,Nfft,Fs,'centered');
+[Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
 figure,semilogy(f,Px),axis('tight');
 grid on
 xlabel('Frequency [GHz]','Interpreter','latex');
@@ -52,9 +55,14 @@ freqCarrier=2.1e+09;
 freqSampl=5e+09;
 % We use: modulate() = x.*cos(2*pi*freqCarrier*t)
 % which applies amplitude modulation at the desired frequency
-signalRF=modulate(rectSignal,freqCarrier,freqSampl,'am');
+signalRF=modulate(signalRect,freqCarrier,freqSampl,'am');
 figure,stem(signalRF(1:discreteTimePlot*10)),grid on,axis('padded');
+xlabel('[n]','Interpreter','latex');
+ylabel('y[n]','Interpreter','latex');
 title('Modulated signal | $f_c=2.1 GHz$','Interpreter','latex');
 % ESTIMATED PSD TO BE COMPUTED AND PLOTTED
-%% Channel model
+%% Channel model: phase shift and frequency shift
 shiftDoppler=500e+03;
+shiftPhase=500;
+signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
+%% Receiver side: de-modulate signalRx and apply 2D correlation
