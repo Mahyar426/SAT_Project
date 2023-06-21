@@ -74,19 +74,19 @@ xlabel('Frequency [GHz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ of modulated signal | Bandpass with $f_{carrier} = 2.1$ GHz','Interpreter','latex')
 %% Channel model: phase shift and frequency shift
-shiftDoppler=501e+03;
-shiftPhase=501;
+shiftDoppler=101e+03;
+shiftPhase=101;
 signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
 %% Receiver side: demodulate + 2D correlation
 % We demodulate at an intermediate frequency using
 % demod() = sinusoid multiplication at freqIF and 
 % fifth-order Butterworth lowpass filter 
-freqIF=1.5e+09;
+freqIF=1.5e+09; % To be changed, very close to baseband like 4/10MHz
 signalIF=demod(signalRx,freqCarrier,freqSampl,'am');
-% Test arrays
-shiftDopplerTestArray=1e+03:50e+03:951e+03;
-shiftPhaseTestArray=1:50:1000;
-% Cross-ambiguity function computation
+% Test arrays -> THEY HAVE TO BE COMPUTED PROPERLY!
+shiftDopplerTestArray=1e+03:50e+03:501e+03;
+shiftPhaseTestArray=1:50:501;
+% Cross-ambiguity function computation in the DD domain 
 for i=1:length(shiftPhaseTestArray)
     % Using a local replica of the code
     replicaTest=signalRect;
@@ -98,13 +98,15 @@ for i=1:length(shiftPhaseTestArray)
         replicaTest=modulate(replicaTest,freqIF,freqSampl,"am");
         replicaTest=replicaTest.*exp(2i*pi*shiftDopplerTestArray(j));
         % Compute cross-ambiguity function
-        CAF=ifft(fft(replicaTest).*conj(fft(signalIF)));
+        CAF=ifft(fft(replicaTest).*conj(fft(signalIF)));% it's already doing circular shift!!!
         squaredCAF(i,j,:)=abs(CAF).^2;
     end
 end
+
 %% 3D plot of the cross-ambiguity function
-% [X,Y]=meshgrid(shiftDopplerTestArray,shiftPhaseTestArray);
-% figure,mesh(X,Y,Z')
+[X,Y]=meshgrid(shiftPhaseTestArray,shiftDopplerTestArray);
+figure,CA_Plot=mesh(X,Y,Z/1e+12);
+CA_Plot.FaceColor = 'flat';
 
 
 
