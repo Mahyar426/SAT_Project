@@ -1,4 +1,4 @@
-% Simulation for delay estimation through 2D-correlation
+% Simulation of GNSS receiver acquisition stage 
 
 clc
 clear
@@ -44,34 +44,45 @@ Nwel=N/10;          % Length of thw window
 h=ones(1,Nwel);     % Rectangular window to pre-filter
 Noverlap=Nwel/2;    % Number of overlapping samples
 Nfft=4096;          % Number of FFT points per window
-Fs=SpS*Fchip;       % Optimal sampling rate
+Fs=SpS*Fchip;       % Optimal sampling rate at baseband
 [Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
 figure,plot(f,pow2db(Px)),axis('tight'),grid on;
-xlabel('Frequency [GHz]','Interpreter','latex');
+xlabel('Frequency [Hz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ of rectangularly-shaped signal | Baseband','Interpreter','latex');
-%% Bandpass modulation ====================================================
-freqCarrierRF=2.1e+09;
-freqSamplRF=5e+09;
-% We use: modulate() = x.*cos(2*pi*freqCarrier*t)
-% which applies amplitude modulation at the desired frequency
-signalRF=modulate(signalRect,freqCarrierRF,freqSamplRF,'am');
+%% RF-IF front-end operations =============================================
+% Here we just modulate the local replica of the code to an intermediate
+% frequency close to baseband, to preserve the capability of estimating
+% the Doppler shift (either positive or negative)
+freqIF=10e+06;
+freqSamplIF=SpS*freqIF;
+signalIF=modulate(signalRect,freqIF,freqSamplIF,'am');
+% PSD estimation of IF signal
+N=length(signalRect);
+Nwel=N/10;          % Length of thw window
+h=ones(1,Nwel);     % Rectangular window to pre-filter
+Noverlap=Nwel/2;    % Number of overlapping samples
+Nfft=4096;          % Number of FFT points per window
+Fs=freqSamplIF;     % Optimal sampling rate
+[Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'centered');
+figure,plot(f,pow2db(Px)),axis('tight'),grid on;
+xlabel('Frequency [Hz]','Interpreter','latex');
+ylabel('Magnitude [dB]','Interpreter','latex');
+title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}$ $ =$ $ 10$ $ MHz$','Interpreter','latex');
+return
+%% Search Space (SS) definition ===========================================
+% L=length(Code);
+% coherentTime=
 %% Channel model: phase shift and frequency shift =========================
 % shiftDoppler=;
 % shiftPhase=;
 % signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
-%% RF-IF front-end demodulation ===========================================
-% We demodulate at an intermediate frequency (close to baseband to not
-% lose info about the Doppler shifts) using demod() = multiplication
-% by a sinusoid at freqIF and a fifth-order Butterworth lowpass filter
-freqIF=10e+06;
-freqSamplIF=5e+09;
-signalIF=demod(signalRF,0,freqSamplRF,'am');
-return
 %% Acquisition stage: delay and Doppler estimation ========================
 % Test arrays -> THEY HAVE TO BE COMPUTED PROPERLY!
 shiftDopplerTestArray=1e+03:50e+03:501e+03;
 shiftPhaseTestArray=1:50:501;
+% Generate local replica signal modulated at IF
+
 % Cross-ambiguity function computation in the DD domain 
 for i=1:length(shiftPhaseTestArray)
     % Using a local replica of the code
