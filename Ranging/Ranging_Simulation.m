@@ -31,56 +31,61 @@ figure,stem(Code(1:discreteTimePlot)),grid on,axis('padded');
 title('T4B Pseudo-Noise sequence','Interpreter','latex');
 xlabel('[n]','Interpreter','latex');
 %% Baseband signal generation =============================================
-SpS=4; 
-Fchip=2e+06;       % From CCSDS 414.1-B-2 - Table A-1
+SpS=4;                      % Arbitrarily chosen here
+Fchip=2e+06;                % From CCSDS 414.1-B-2 - Table A-1
 signalRect=rectpulse(Code,SpS);
-figure,stem(signalRect(1:discreteTimePlot)),grid on,axis('padded');
-title(['Rectangularly-shaped signal | SpS=',num2str(SpS)],'Interpreter','latex');
-xlabel('[n]','Interpreter','latex');
-ylabel('y[n]','Interpreter','latex');
 % PSD estimation of baseband signal
 N=length(signalRect);
-Nwel=N/10;          % Length of thw window
-h=ones(1,Nwel);     % Rectangular window to pre-filter
-Noverlap=Nwel/2;    % Number of overlapping samples
-Nfft=4096;          % Number of FFT points per window
-Fs=SpS*Fchip;       % Optimal sampling rate at baseband
+Nwel=N/10;                  % Length of thw window
+h=ones(1,Nwel);             % Rectangular window to pre-filter
+Noverlap=Nwel/2;            % Number of overlapping samples
+Nfft=4096;                  % Number of FFT points per window
+Fs=SpS*Fchip;               % Optimal sampling rate at baseband
 [Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
 figure,plot(f,pow2db(Px)),axis('tight'),grid on;
 xlabel('Frequency [Hz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ of rectangularly-shaped signal | Baseband','Interpreter','latex');
 %% RF-IF front-end operations =============================================
-% Here we just modulate the local replica of the code to an intermediate
-% frequency close to baseband, to preserve the capability of estimating
-% the Doppler shift (either positive or negative)
-freqIF=10e+06;
-freqSamplIF=SpS*freqIF;
+freqIF=10e+06;              % From CCSDS 414.0-G-2 - Section 2.2.5
+freqSamplIF=30e+06;         % > 24 MHz from IF spectrum plot
+SpS=ceil(freqSamplIF*(1/Fchip));
+signalRect=rectpulse(Code,SpS);
 signalIF=modulate(signalRect,freqIF,freqSamplIF,'am');
 % PSD estimation of IF signal
 N=length(signalRect);
-Nwel=N/10;          % Length of thw window
-h=ones(1,Nwel);     % Rectangular window to pre-filter
-Noverlap=Nwel/2;    % Number of overlapping samples
-Nfft=4096;          % Number of FFT points per window
-Fs=freqSamplIF;     % Optimal sampling rate
-[Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'centered');
+Nwel=N/10;                  % Length of thw window
+h=ones(1,Nwel);             % Rectangular window to pre-filter
+Noverlap=ceil(Nwel/2);            % Number of overlapping samples
+Nfft=4096;                  % Number of FFT points per window
+Fs=freqSamplIF;             % Optimal sampling rate
+[Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'onesided');
 figure,plot(f,pow2db(Px)),axis('tight'),grid on;
 xlabel('Frequency [Hz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
-title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}$ $ =$ $ 10$ $ MHz$','Interpreter','latex');
-return
+title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}=$ $ 10$ $MHz$','Interpreter','latex');
 %% Search Space (SS) definition ===========================================
-% L=length(Code);
-% coherentTime=
+L=length(Code);
+Ts=1/freqSamplIF;
+Tcoh=L*Ts;
+Ntau=L;
+binsTau=0:1:Ntau;
+freqDopplerMax=10e+03;
+deltaFreq=ceil(2/(3*Tcoh));
+binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
 %% Channel model: phase shift and frequency shift =========================
-% shiftDoppler=;
-% shiftPhase=;
-% signalRx=circshift(signalRF.*exp(2i*pi*shiftDoppler),shiftPhase);
-%% Acquisition stage: delay and Doppler estimation ========================
-% Test arrays -> THEY HAVE TO BE COMPUTED PROPERLY!
-shiftDopplerTestArray=1e+03:50e+03:501e+03;
-shiftPhaseTestArray=1:50:501;
+rng(0,'twister');
+minRange=1;
+% maxRangeDoppler=length(binsDoppler);
+maxRangeTau=L;
+% randNumDoppler=floor((maxRangeDoppler-minRange)*rand(1,1)+minRange)
+randNumDoppler=200;
+randNumTau=floor((maxRangeTau-minRange)*rand(1,1)+minRange);
+shiftDoppler=randNumDoppler;
+shiftTau=randNumTau;
+signalRx=circshift(signalIF.*exp(2i*pi*shiftDoppler),shiftTau);
+return
+%% Acquisition stage: (delay, Doppler) estimation =========================
 % Generate local replica signal modulated at IF
 
 % Cross-ambiguity function computation in the DD domain 
