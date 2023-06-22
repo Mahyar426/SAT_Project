@@ -43,12 +43,14 @@ Nfft=4096;                  % Number of FFT points per window
 Fs=SpS*Fchip;               % Optimal sampling rate at baseband
 [Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
 figure,plot(f,pow2db(Px)),axis('tight'),grid on;
+xline(0,'LineWidth',1.5,'LineStyle','--','Color',[0.8500 0.3250 0.0980]);
 xlabel('Frequency [Hz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ of rectangularly-shaped signal | Baseband','Interpreter','latex');
 %% RF-IF front-end operations =============================================
 freqIF=10e+06;              % From CCSDS 414.0-G-2 - Section 2.2.5
 freqSamplIF=30e+06;         % > 24 MHz from IF spectrum plot
+% Generating IF signal
 SpS=ceil(freqSamplIF*(1/Fchip));
 signalRect=rectpulse(Code,SpS);
 signalIF=modulate(signalRect,freqIF,freqSamplIF,'am');
@@ -56,11 +58,12 @@ signalIF=modulate(signalRect,freqIF,freqSamplIF,'am');
 N=length(signalRect);
 Nwel=N/10;                  % Length of thw window
 h=ones(1,Nwel);             % Rectangular window to pre-filter
-Noverlap=ceil(Nwel/2);            % Number of overlapping samples
+Noverlap=ceil(Nwel/2);      % Number of overlapping samples
 Nfft=4096;                  % Number of FFT points per window
 Fs=freqSamplIF;             % Optimal sampling rate
 [Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'onesided');
 figure,plot(f,pow2db(Px)),axis('tight'),grid on;
+xline(10e+06,'LineWidth',1.5,'LineStyle','--','Color',[0.8500 0.3250 0.0980]);
 xlabel('Frequency [Hz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}=$ $ 10$ $MHz$','Interpreter','latex');
