@@ -26,21 +26,9 @@ while counter<=codeLen
     C6 = circshift(C6,1);
     counter=counter+1;
 end
-%% Analog signal generation
-l=4;
-k=6;
-f_X_Band=(7.195)*1e9;
-f_Ka_Band=(22.85)*1e9;
-chip_rate= 2.5e6; %taken from 414x0g2 pag 21
-Chip_rate_X_Band=(l*221*f_X_Band)/(749*128*2^k);
-Chip_rate_Ka_Band=(l*221*f_Ka_Band)*(3599*128*2^k);
-Tc = 1/chip_rate; %0.4e6 --> 0.4 micro sec
-Tc_X=1/Chip_rate_X_Band;
-Tc_Ka=1/Chip_rate_Ka_Band;
-nsamp=4; % Number of samples per symbols
-nsamp_X=10;
-nsamp_Ka=10;
-analog_signal = rectpulse(Code,nsamp); % shaped signal
+%% Analog signal generation ===============================================
+SpS=4;                                  % Number of samples per symbols
+analog_signal = rectpulse(Code,SpS);    % Rectangularly-shaped signal
 %% Welch periodogram 
 N=length(analog_signal);
 Nwel=N/10;
