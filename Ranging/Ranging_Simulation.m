@@ -79,6 +79,7 @@ binsTau=0:1:Ntau;
 freqDopplerMax=10e+03;
 deltaFreq=ceil(2/(3*Tcoh));
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
+Nf=length(binsDoppler);
 %% Channel model: phase shift and frequency shift =========================
 rng(0,'twister');
 minRange=1;
@@ -92,14 +93,23 @@ disp(['Doppler shift is: ',num2str(shiftDoppler),' kHz']);
 shiftTau=randNumTau;
 disp(['Delay shift is: ',num2str(shiftTau),' sequence bits']);
 signalRx=circshift(signalIF.*exp(2i*pi*shiftDoppler),shiftTau);
-return
 %% Acquisition stage: (delay, Doppler) estimation =========================
 % Local replica signal modulated at IF
+signalReplica=modulate(signalRect,freqIF,freqSamplIF,'am');
 
-% Cross-ambiguity function in the DD domain, through FFT
+%% We need just the signalRx with only one copy each and signalRect with SpS=1 
+%% This to fit the correct dimension
 
 
-%% 3D plot of the cross-ambiguity function ================================
+% Cross-ambiguity function in the DD domain
+for i=1:Nf
+    % Apply test Doppler shifts to the local replica
+    signalTest=signalReplica.*exp(2i*pi*binsDoppler(i));
+    % Circular correlation via FFT -> all delay shifts
+    CAF(i,:)=ifft(fft(signalTest).*conj(fft(signalRx)));
+end
+return
+%% CAF 3D plot ============================================================
 % [X,Y]=meshgrid(shiftPhaseTestArray,shiftDopplerTestArray);
 % figure,CA_Plot=mesh(X,Y,Z/1e+12);
 % CA_Plot.FaceColor = 'flat';
