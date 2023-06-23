@@ -36,15 +36,15 @@ Fchip=2e+06;                % From CCSDS 414.1-B-2 - Table A-1
 signalRect=rectpulse(Code,SpS);
 % PSD estimation of baseband signal
 N=length(signalRect);
-Nwel=N/10;                  % Length of thw window
+Nwel=N/10;                  % Length of the window
 h=ones(1,Nwel);             % Rectangular window to pre-filter
 Noverlap=Nwel/2;            % Number of overlapping samples
 Nfft=4096;                  % Number of FFT points per window
 Fs=SpS*Fchip;               % Optimal sampling rate at baseband
 [Px,f]=pwelch(signalRect,h,Noverlap,Nfft,Fs,'centered');
-figure,plot(f,pow2db(Px)),axis('tight'),grid on;
-xline(0,'LineWidth',1.5,'LineStyle','--','Color',[0.8500 0.3250 0.0980]);
-xlabel('Frequency [Hz]','Interpreter','latex');
+figure,plot((f./1e+07).*10,pow2db(Px)),axis('tight'),grid on;
+xline(0,'LineWidth',1.5,'LineStyle','--','Color','black');
+xlabel('Frequency [MHz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ of rectangularly-shaped signal | Baseband','Interpreter','latex');
 %% RF-IF front-end operations =============================================
@@ -56,15 +56,18 @@ signalRect=rectpulse(Code,SpS);
 signalIF=modulate(signalRect,freqIF,freqSamplIF,'am');
 % PSD estimation of IF signal
 N=length(signalRect);
-Nwel=N/10;                  % Length of thw window
+Nwel=N/10;                  % Length of the window
 h=ones(1,Nwel);             % Rectangular window to pre-filter
 Noverlap=ceil(Nwel/2);      % Number of overlapping samples
-Nfft=4096;                  % Number of FFT points per window
+Nfft=2048;                  % Number of FFT points per window
 Fs=freqSamplIF;             % Optimal sampling rate
-[Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'onesided');
-figure,plot(f,pow2db(Px)),axis('tight'),grid on;
-xline(10e+06,'LineWidth',1.5,'LineStyle','--','Color',[0.8500 0.3250 0.0980]);
-xlabel('Frequency [Hz]','Interpreter','latex');
+[Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'centered');
+figure,plot((f./1e+07).*10,pow2db(Px)),axis('tight'),grid on;
+xlim([-15 15]);
+xline(0,'LineWidth',1.5,'LineStyle','--','Color','black');
+xline(10,'LineWidth',1.5,'LineStyle','--','Color',[0.8500 0.3250 0.0980]);
+xline(-10,'LineWidth',1.5,'LineStyle','--','Color',[0.8500 0.3250 0.0980]);
+xlabel('Frequency [MHz]','Interpreter','latex');
 ylabel('Magnitude [dB]','Interpreter','latex');
 title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}=$ $ 10$ $MHz$','Interpreter','latex');
 %% Search Space (SS) definition ===========================================
@@ -85,33 +88,21 @@ maxRangeTau=L;
 randNumDoppler=200;
 randNumTau=floor((maxRangeTau-minRange)*rand(1,1)+minRange);
 shiftDoppler=randNumDoppler;
+disp(['Doppler shift is: ',num2str(shiftDoppler),' kHz']);
 shiftTau=randNumTau;
+disp(['Delay shift is: ',num2str(shiftTau),' sequence bits']);
 signalRx=circshift(signalIF.*exp(2i*pi*shiftDoppler),shiftTau);
 return
 %% Acquisition stage: (delay, Doppler) estimation =========================
-% Generate local replica signal modulated at IF
+% Local replica signal modulated at IF
 
-% Cross-ambiguity function computation in the DD domain 
-for i=1:length(shiftPhaseTestArray)
-    % Using a local replica of the code
-    replicaTest=signalRect;
-    % Apply test phase shifts
-    replicaTest=circshift(replicaTest,shiftPhaseTestArray(i));
-    for j=1:length(shiftDopplerTestArray)
-        % Modulate at a test frequency composed by the intermediate
-        % frequency and the test Doppler shifts
-        replicaTest=modulate(replicaTest,freqIF,freqSampl,"am");
-        replicaTest=replicaTest.*exp(2i*pi*shiftDopplerTestArray(j));
-        % Compute cross-ambiguity function
-        CAF=ifft(fft(replicaTest).*conj(fft(signalIF)));% it's already doing circular shift!!!
-        squaredCAF(i,j,:)=abs(CAF).^2;
-    end
-end
+% Cross-ambiguity function in the DD domain, through FFT
+
 
 %% 3D plot of the cross-ambiguity function ================================
-[X,Y]=meshgrid(shiftPhaseTestArray,shiftDopplerTestArray);
-figure,CA_Plot=mesh(X,Y,Z/1e+12);
-CA_Plot.FaceColor = 'flat';
+% [X,Y]=meshgrid(shiftPhaseTestArray,shiftDopplerTestArray);
+% figure,CA_Plot=mesh(X,Y,Z/1e+12);
+% CA_Plot.FaceColor = 'flat';
 
 
 
