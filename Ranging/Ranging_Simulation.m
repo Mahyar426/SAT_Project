@@ -73,14 +73,14 @@ title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}=$ $ 10$ $MHz$
 %% Search Space (SS) definition ===========================================
 L=length(Code);
 Ts=1/freqSamplIF;
-Tcoh=L*Ts;
+Tcoh=L*Ts;              %%% HAVE TO CHECK THIS: MULTIPLE OF Tcode!!! + # SAMPLES PER CHIP
 Ntau=L;
 binsTau=0:1:Ntau;
 freqDopplerMax=10e+03;
 deltaFreq=ceil(2/(3*Tcoh));
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
 Nf=length(binsDoppler);
-%% Channel model: phase shift and frequency shift =========================
+%% Channel model: (delay, Doppler) shifts =================================
 rng(0,'twister');
 minRange=1;
 % maxRangeDoppler=length(binsDoppler);
@@ -92,27 +92,25 @@ shiftDoppler=randNumDoppler;
 disp(['Doppler shift is: ',num2str(shiftDoppler),' kHz']);
 shiftTau=randNumTau;
 disp(['Delay shift is: ',num2str(shiftTau),' sequence bits']);
-signalRx=circshift(signalIF.*exp(2i*pi*shiftDoppler),shiftTau);
-%% Acquisition stage: (delay, Doppler) estimation =========================
+%% Acquisition: (delay, Doppler) estimation ===============================
+% Signal Rx demodulated + brought at IF by front-end
+signalRx=modulate(Code,freqIF,freqSamplIF,'am');
+% Channel contribution without AWGN
+signalRx=circshift(signalRx.*exp(2i*pi*shiftDoppler),shiftTau);
 % Local replica signal modulated at IF
-signalReplica=modulate(signalRect,freqIF,freqSamplIF,'am');
-
-%% We need just the signalRx with only one copy each and signalRect with SpS=1 
-%% This to fit the correct dimension
-
-
+signalReplica=modulate(Code,freqIF,freqSamplIF,'am');
 % Cross-ambiguity function in the DD domain
+S=zeros(Nf,Ntau);
 for i=1:Nf
-    % Apply test Doppler shifts to the local replica
+    % Apply test Doppler shifts
     signalTest=signalReplica.*exp(2i*pi*binsDoppler(i));
-    % Circular correlation via FFT -> all delay shifts
-    CAF(i,:)=ifft(fft(signalTest).*conj(fft(signalRx)));
+    % Delay shifts dealed with FFT circular correlation
+    CAF=ifft(fft(signalTest).*conj(fft(signalRx)));
+    S(i,:)=abs(CAF').^2;
 end
-return
 %% CAF 3D plot ============================================================
-% [X,Y]=meshgrid(shiftPhaseTestArray,shiftDopplerTestArray);
-% figure,CA_Plot=mesh(X,Y,Z/1e+12);
-% CA_Plot.FaceColor = 'flat';
+% figure,S_Plot=mesh(S);
+% S_Plot.FaceColor = 'flat';
 
 
 
