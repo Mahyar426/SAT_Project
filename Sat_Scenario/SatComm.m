@@ -4,13 +4,13 @@ clc
 clear
 close all
 
-%% Setting up the scenario %%
+%% Setting up the scenario 
 startTime=datetime(2023,01,01,00,00,0);
 stopTime=startTime+days(7);
 sampleTime=60;
 sc=satelliteScenario(startTime,stopTime,sampleTime);
 
-%% Satellite object definition %%
+%% Satellite object definition 
 hSat=500e3;
 inclAngleSat=97.4;
 EOSat.semiMajorAxis=earthRadius+hSat; % [m]
@@ -27,7 +27,7 @@ EOSat.satellite=satellite(sc,EOSat.semiMajorAxis,EOSat.eccentricity,EOSat.inclin
 EOSat.gimbal=gimbal(EOSat.satellite);
 
 % Satellite transmitter definition
-fc=8200e6;      %%% Carrier frequency in 8 GHz - 8.4 GHz (X-band)
+fc=8200e6;      %%% Carrier frequency in X-band (8 GHz-8.4 GHz)
 pTxSat=1.76;    %%% Tx power: 1.5 W (Enduro SAT) -> 1.76 dBW
 sysLSat=1;      %%% System loss
 m=2;            %%% Modulation: QPSK
@@ -44,7 +44,7 @@ dishSat=0.183;
 effSat=0.65;
 gaussianAntenna(txSat,DishDiameter=dishSat,ApertureEfficiency=effSat);
 
-%% Inuvik ground station %%
+%% Inuvik ground station 
 elAngle=10;
 gs1=groundStation(sc,Name="Inuvik",Latitude=68.35,Longitude=-133.72,Altitude=15,MinElevationAngle=elAngle);
 
@@ -55,7 +55,7 @@ gimbgs1_rain=gimbal(gs1,MountingAngles=[0;180;0]);
 % Station receiver definition for clear sky condition
 GT_clear=25;
 sysLGS=1;              %%% Ground station loss
-EbNoThresholdMu=2+2;   %%% 
+EbNoThresholdMu=2+4;   %%% (grants BER<10^-6)+(safety margin)
 Rbgross=Rbnet/Rcode;   %%% Max Rbgross: 150 Mbps
 B=Bandwidth*1e6;
 SpectEff=m*Rcode;
@@ -76,7 +76,7 @@ rxgs1_rain=receiver(gimbgs1_rain,Name="Inuvik RX",GainToNoiseTemperatureRatio=GT
 gaussianAntenna(rxgs1_clear,DishDiameter=dishGS,ApertureEfficiency=effGS);
 gaussianAntenna(rxgs1_rain,DishDiameter=dishGS,ApertureEfficiency=effGS);
 
-%% Link budget evaluation for Inuvik ground station %%
+%% Link budget evaluation for Inuvik ground station 
 
 % Gimbals orientation to each other
 pointAt(EOSat.gimbal,gs1);
@@ -125,7 +125,7 @@ leg=legend("Clear Sky","Rainy Sky","Location","southeast");
 set(leg,"Interpreter","Latex")
 hold off;
 
-%% Svalbard ground station %%
+%% Svalbard ground station 
 gs2=groundStation(sc,Name="Svalbard",Latitude=78.22,Longitude=15.38,Altitude=440,MinElevationAngle=elAngle);
 
 % Station gimbal definition
@@ -145,7 +145,7 @@ rxgs2_rain=receiver(gimbgs2_rain,GainToNoiseTemperatureRatio=GT_rain,SystemLoss=
 gaussianAntenna(rxgs2_clear,DishDiameter=dishGS,ApertureEfficiency=effGS);
 gaussianAntenna(rxgs2_rain,DishDiameter=dishGS,ApertureEfficiency=effGS);
 
-%% Link budget evaluation for Svalbard ground station %%
+%% Link budget evaluation for Svalbard ground station 
 
 % Gimbals orientation to each other
 pointAt(EOSat.gimbal,gs2);
@@ -194,7 +194,7 @@ leg=legend("Clear Sky","Rainy Sky","Location","southeast");
 set(leg,"Interpreter","Latex")
 hold off;
 
-%% Awarua ground station %%
+%% Awarua ground station 
 gs3=groundStation(sc,Name="Awarua",Latitude=-46.52,Longitude=168.48,Altitude=0,MinElevationAngle=elAngle);
 
 % Station gimbal definition
@@ -214,7 +214,7 @@ rxgs3_rain=receiver(gimbgs3_rain,GainToNoiseTemperatureRatio=GT_rain,SystemLoss=
 gaussianAntenna(rxgs3_clear,DishDiameter=dishGS,ApertureEfficiency=effGS);
 gaussianAntenna(rxgs3_rain,DishDiameter=dishGS,ApertureEfficiency=effGS);
 
-%% Link budget evaluation for Awarua ground station %%
+%% Link budget evaluation for Awarua ground station 
 
 % Gimbals orientation to each other
 pointAt(EOSat.gimbal,gs3);
@@ -263,7 +263,7 @@ leg=legend("Clear Sky","Rainy Sky","Location","southeast");
 set(leg,"Interpreter","Latex")
 hold off;
 
-%% Troll ground station %%
+%% Troll ground station 
 gs4=groundStation(sc,Name="Troll",Latitude=-72.01,Longitude=2.53,Altitude=1200,MinElevationAngle=elAngle);
 
 % Station gimbal definition
@@ -332,7 +332,7 @@ leg=legend("Clear Sky","Rainy Sky","Location","southeast");
 set(leg,"Interpreter","Latex")
 hold off;
 
-%% Plots per station and per network %%
+%% Plots per station and per network 
 
 stations=categorical({'Inuvik','Svalbard','Awarua','Troll'});
 
@@ -386,7 +386,7 @@ axy=ylabel('Percentage');
 set(axy,"Interpreter","Latex");
 set(tit,"Interpreter","Latex");
 
-%% LEO Data Relay System Performance %%
+%% LEO Data Relay System Performance 
 
 % Walker Constellation definition
 LDRS.planes=3;
@@ -437,7 +437,7 @@ end
 LDRSVisibleSatsOverSimTime;
 
 
-%% Plots for LEO data relay system %%
+%% Plots for LEO data relay system 
 
 % Connectivity, Latency, Availability
 connectivityLEOArray=sum(connectivityLEO,1);
