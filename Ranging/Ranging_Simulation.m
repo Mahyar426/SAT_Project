@@ -75,7 +75,7 @@ L=length(Code);
 Ts=1/freqSamplIF;
 Tcoh=L*Ts;              %%% HAVE TO CHECK THIS: MULTIPLE OF Tcode!!! + # SAMPLES PER CHIP
 Ntau=L;
-binsTau=0:1:Ntau;
+binsTau=0:1:Ntau-1;
 freqDopplerMax=10e+03;
 deltaFreq=ceil(2/(3*Tcoh));
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
@@ -93,22 +93,20 @@ disp(['Doppler shift is: ',num2str(shiftDoppler),' kHz']);
 shiftTau=randNumTau;
 disp(['Delay shift is: ',num2str(shiftTau),' sequence bits']);
 %% Acquisition: (delay, Doppler) estimation ===============================
-% Signal Rx demodulated + brought at IF by front-end
-signalRx=modulate(Code,freqIF,freqSamplIF,'am');
 % Channel contribution without AWGN
-signalRx=circshift(signalRx.*exp(2i*pi*shiftDoppler),shiftTau);
+signalRx=circshift(signalIF.*exp(2i*pi*shiftDoppler),shiftTau);
 % Local replica signal modulated at IF
-signalReplica=modulate(Code,freqIF,freqSamplIF,'am');
+signalReplica=signalIF;
 % Cross-ambiguity function in the DD domain
 S=zeros(Nf,Ntau);
 for i=1:Nf
     % Apply test Doppler shifts
     signalTest=signalReplica.*exp(2i*pi*binsDoppler(i));
     % Delay shifts dealed with FFT circular correlation
-    CAF=ifft(fft(signalTest).*conj(fft(signalRx)));
+    CAF=ifft(fft(signalTest,L).*conj(fft(signalRx,L)));
     S(i,:)=abs(CAF').^2;
 end
-%% CAF 3D plot ============================================================
+%% 3D plot for results evaluation =========================================
 % figure,S_Plot=mesh(S);
 % S_Plot.FaceColor = 'flat';
 
