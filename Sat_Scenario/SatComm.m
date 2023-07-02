@@ -28,7 +28,7 @@ EOSat.gimbal=gimbal(EOSat.satellite);
 
 % Satellite transmitter definition
 fc=8200e6;      %%% Carrier frequency in X-band (8 GHz-8.4 GHz)
-pTxSat=1.76;    %%% Tx power: 1.5 W (Enduro SAT) -> 1.76 dBW
+pTxSat=1.76;    %%% Tx power: 1.5 W (EnduroSat) -> 1.76 dBW
 sysLSat=1;      %%% System loss
 m=2;            %%% Modulation: QPSK
 ro=0.2;         %%% Roll-off factor of the shaping filter
@@ -54,9 +54,9 @@ gimbgs1_rain=gimbal(gs1,MountingAngles=[0;180;0]);
 
 % Station receiver definition for clear sky condition
 GT_clear=25;
-sysLGS=1;              %%% Ground station loss
-EbNoThresholdMu=2+4;   %%% (grants BER<10^-6)+(safety margin)
-Rbgross=Rbnet/Rcode;   %%% Max Rbgross: 150 Mbps
+sysLGS=0.8;                 %%% Ground station loss
+EbNoThresholdMu=2.3+4;      %%% (grants BER<10^-6)+(safety margin)
+Rbgross=Rbnet/Rcode;        %%% Max Rbgross: 150 Mbps
 B=Bandwidth*1e6;
 SpectEff=m*Rcode;
 thSNR=EbNoThresholdMu+SpectEff-10*log10(1+ro);
@@ -67,7 +67,7 @@ GrxGS=47.8; % Obtained from 10*log10(141.50+50)+G/T
 dishGS=3.7;
 effGS=0.65;
 tempRx=141.5;
-PLcfgP618=p618Config(Frequency=fc,ElevationAngle=elAngle,Latitude=68.35,Longitude=-133.72,TotalAnnualExceedance=0.1,AntennaDiameter=dishGS,AntennaEfficiency=effGS);
+PLcfgP618=p618Config(Frequency=fc,ElevationAngle=elAngle,Latitude=68.35,Longitude=-133.72,TotalAnnualExceedance=0.01,AntennaDiameter=dishGS,AntennaEfficiency=effGS);
 [PL,~,Tsky_rain]=p618PropagationLosses(PLcfgP618);
 GT_rain=GrxGS-10*log10(tempRx+Tsky_rain);
 rxgs1_rain=receiver(gimbgs1_rain,Name="Inuvik RX",GainToNoiseTemperatureRatio=GT_rain,SystemLoss=sysLGS,RequiredEbNo=thSNR,PreReceiverLoss=0);
@@ -121,7 +121,7 @@ set(axx,"Interpreter","Latex");
 axy=ylabel("SNR [dB]");
 set(axy,"Interpreter","Latex");
 title("Link performance at Inuvik","Interpreter","Latex");
-leg=legend("Clear Sky","Rainy Sky","Location","southeast");
+leg=legend("Clear Sky","Rainy Sky","Location","best");
 set(leg,"Interpreter","Latex")
 hold off;
 
@@ -190,7 +190,7 @@ set(axx,"Interpreter","Latex");
 axy=ylabel("SNR [dB]");
 set(axy,"Interpreter","Latex");
 title("Link performance at Svalbard","Interpreter","Latex");
-leg=legend("Clear Sky","Rainy Sky","Location","southeast");
+leg=legend("Clear Sky","Rainy Sky","Location","best");
 set(leg,"Interpreter","Latex")
 hold off;
 
@@ -259,7 +259,7 @@ set(axx,"Interpreter","Latex");
 axy=ylabel("SNR [dB]");
 set(axy,"Interpreter","Latex");
 title("Link performance at Awarua","Interpreter","Latex");
-leg=legend("Clear Sky","Rainy Sky","Location","southeast");
+leg=legend("Clear Sky","Rainy Sky","Location","best");
 set(leg,"Interpreter","Latex")
 hold off;
 
@@ -328,7 +328,7 @@ set(axx,"Interpreter","Latex");
 axy=ylabel("SNR [dB]");
 set(axy,"Interpreter","Latex");
 title("Link performance at Troll","Interpreter","Latex");
-leg=legend("Clear Sky","Rainy Sky","Location","southeast");
+leg=legend("Clear Sky","Rainy Sky","Location","best");
 set(leg,"Interpreter","Latex")
 hold off;
 
