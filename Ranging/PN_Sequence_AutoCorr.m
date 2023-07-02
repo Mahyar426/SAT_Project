@@ -37,25 +37,16 @@ axy=ylabel('Normalized Auto Correlation');
 set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
-%% Test
-% C1_extended=[];
-% while length(C1_extended)<length(Code)
-%     C1_extended=[C1_extended;C1'];
-% end
-% C2_extended=[];
-% while length(C2_extended)<length(Code)
-%     C2_extended=[C2_extended;C2];
-% end
-% startingPosC2=0;
-% for i=1:length(Code)-length(C2)
-%     if isequal(Code(i:i+length(C2)-1),C2')
-%         startingPosC2=i;
-%         break
-%     end
-% end
-%% Compute in-phase correlation
-% InPhase1=ifft(fft(C1_extended).*conj(fft(Code)));
-% valueInphase1=sum(abs(InPhase1/codeLen))
-% CodeShifted=circshift(Code,length(Code)-startingPosC2+1);
-% InPhase2=ifft(fft(C2_extended).*conj(fft(Code)));
-% valueInphase2=sum(abs(InPhase2/codeLen))
+%% Upsampled sequence at IF signal
+nsamp=4; % number of samples per symbols
+analog_signal = rectpulse(Code,nsamp); % this is the analog signal
+fc=4e9;
+fs=9e9;
+sinusoidal_signal = modulate(analog_signal,fc,fs);
+% Autocorrelation of upsampled signal
+AC=ifft(fft(sinusoidal_signal).*conj(fft(sinusoidal_signal)));
+AC=fftshift(AC);
+AC=abs(AC/length(AC));
+symmInterval=round(length(AC)/2);
+tau=-symmInterval:1:symmInterval-1;
+figure,plot(tau,AC),axis('padded');

@@ -73,7 +73,7 @@ title('$\hat{P} (f)$ at Intermediate Frequency (IF) | $f_{carrier}=$ $ 10$ $MHz$
 %% Search Space (SS) definition ===========================================
 L=length(Code);
 Ts=1/freqSamplIF;
-Tcoh=L*Ts;              %%% HAVE TO CHECK THIS: MULTIPLE OF Tcode!!! + # SAMPLES PER CHIP
+Tcoh=L*Ts;
 Ntau=L;
 binsTau=0:1:Ntau-1;
 freqDopplerMax=10e+03;
@@ -89,7 +89,7 @@ maxRangeTau=L;
 randNumDoppler=200;
 randNumTau=floor((maxRangeTau-minRange)*rand(1,1)+minRange);
 shiftDoppler=randNumDoppler;
-disp(['Doppler shift is: ',num2str(shiftDoppler),' kHz']);
+disp(['Doppler shift is: ',num2str(shiftDoppler),' Hz']);
 shiftTau=randNumTau;
 disp(['Delay shift is: ',num2str(shiftTau),' sequence bits']);
 %% Acquisition: (delay, Doppler) estimation ===============================
