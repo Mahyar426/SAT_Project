@@ -39,19 +39,31 @@ axy=ylabel('Normalized Auto Correlation');
 set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
-%% Upsampled sequence at Intermediate Frequency
+%% Upsampled sequence 
 nsamp=15;
 signalUp=rectpulse(Code,nsamp); 
+% Autocorrelation of upsampled signal
+ACF=ifft(fft(signalUp).*conj(fft(signalUp)));
+ACF=fftshift(ACF);
+ACF=abs(ACF/length(ACF));
+symmInterval=round(length(ACF)/2);
+tau=-symmInterval:1:symmInterval-1;
+figure,plot(tau,ACF),axis('padded');
+tit=title('Circular Auto Correlation of upsampled signal');
+set(tit,'Interpreter','Latex');
+%% Signal at Intermediate Frequency
 fc=10e6;
 fs=(30)*1e6;
 signalMod=modulate(signalUp,fc,fs);
-% Autocorrelation of upsampled mdoulated signal
+% Autocorrelation of modulated signal
 ACF=ifft(fft(signalMod).*conj(fft(signalMod)));
 ACF=fftshift(ACF);
 ACF=abs(ACF/length(ACF));
 symmInterval=round(length(ACF)/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,ACF.^2),axis('padded');
+figure,plot(tau,ACF),axis('padded');
+tit=title('Circular Auto Correlation of modulated signal');
+set(tit,'Interpreter','Latex');
 %% Doppler shift and cross-correlation
 freqDoppler=10e+03;
 signalShift=signalMod.*exp(2i*pi*freqDoppler);
@@ -62,6 +74,5 @@ CCF=abs(CCF/length(CCF));
 symmInterval=round(length(CCF)/2);
 tau=-symmInterval:1:symmInterval-1;
 figure,plot(tau,CCF.^2),axis('padded');
-%% Make spectrum plots
-L = 64;
-wvtool(rectwin(L))
+tit=title(' Circular Cross Correlation between Rx and local replica');
+set(tit,'Interpreter','Latex');
