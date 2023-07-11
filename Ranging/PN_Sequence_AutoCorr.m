@@ -1,7 +1,9 @@
 % Code for regenerative Pseudo-Noise sequence (T4B)
+
 clc
 clear
 close all
+
 %% Initializing circular shift registers
 C1 = [+1 -1];
 C2 = [+1 +1 +1 -1 -1 +1 -1];
@@ -37,16 +39,29 @@ axy=ylabel('Normalized Auto Correlation');
 set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
-%% Upsampled sequence at IF signal
-nsamp=4; % number of samples per symbols
-analog_signal = rectpulse(Code,nsamp); % this is the analog signal
-fc=4e9;
-fs=9e9;
-sinusoidal_signal = modulate(analog_signal,fc,fs);
-% Autocorrelation of upsampled signal
-AC=ifft(fft(sinusoidal_signal).*conj(fft(sinusoidal_signal)));
-AC=fftshift(AC);
-AC=abs(AC/length(AC));
-symmInterval=round(length(AC)/2);
+%% Upsampled sequence at Intermediate Frequency
+nsamp=15;
+signalUp=rectpulse(Code,nsamp); 
+fc=10e6;
+fs=(30)*1e6;
+signalMod=modulate(signalUp,fc,fs);
+% Autocorrelation of upsampled mdoulated signal
+ACF=ifft(fft(signalMod).*conj(fft(signalMod)));
+ACF=fftshift(ACF);
+ACF=abs(ACF/length(ACF));
+symmInterval=round(length(ACF)/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,AC),axis('padded');
+figure,plot(tau,ACF.^2),axis('padded');
+%% Doppler shift and cross-correlation
+freqDoppler=10e+03;
+signalShift=signalMod.*exp(2i*pi*freqDoppler);
+% Do cross-correlation
+CCF=ifft(fft(signalMod).*conj(fft(signalShift)));
+CCF=fftshift(CCF);
+CCF=abs(CCF/length(CCF));
+symmInterval=round(length(CCF)/2);
+tau=-symmInterval:1:symmInterval-1;
+figure,plot(tau,CCF.^2),axis('padded');
+%% Make spectrum plots
+L = 64;
+wvtool(rectwin(L))

@@ -59,7 +59,7 @@ N=length(signalRect);
 Nwel=N/10;                  % Length of the window
 h=ones(1,Nwel);             % Rectangular window to pre-filter
 Noverlap=ceil(Nwel/2);      % Number of overlapping samples
-Nfft=2048;                  % Number of FFT points per window
+Nfft=4096;                  % Number of FFT points per window
 Fs=freqSamplIF;             % Optimal sampling rate
 [Px,f]=pwelch(signalIF,h,Noverlap,Nfft,Fs,'centered');
 figure,plot((f./1e+07).*10,pow2db(Px)),axis('tight'),grid on;
