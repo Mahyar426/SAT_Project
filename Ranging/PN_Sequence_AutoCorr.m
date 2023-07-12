@@ -32,47 +32,67 @@ R_shifted=fftshift(R);
 R_final=abs(R_shifted/codeLen);
 symmInterval=round(codeLen/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,R_final),axis('padded');
+figure,plot(tau,R_final), grid on;
+ylim([0.88 1.02]);
 axx=xlabel('Code Chips');
 set(axx,'Interpreter','Latex');
 axy=ylabel('Normalized Auto Correlation');
 set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
-%% Upsampled sequence 
-nsamp=15;
-signalUp=rectpulse(Code,nsamp); 
+%% Upsampled code for plotting purposes
+nSamples=4;
+signalUp=rectpulse(Code,nSamples);
 % Autocorrelation of upsampled signal
 ACF=ifft(fft(signalUp).*conj(fft(signalUp)));
 ACF=fftshift(ACF);
 ACF=abs(ACF/length(ACF));
 symmInterval=round(length(ACF)/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,ACF),axis('padded');
-tit=title('Circular Auto Correlation of upsampled signal');
+figure,plot(tau,ACF),grid on;
+ylim([0.88 1.02]);
+axx=xlabel('Chips');
+set(axx,'Interpreter','Latex');
+axy=ylabel('Normalized Auto Correlation');
+set(axy,'Interpreter','Latex');
+tit=title(['Upsampled code of factor ' ,num2str(nSamples), ' $\mid$ Circular Auto Correlation']);
 set(tit,'Interpreter','Latex');
-%% Signal at Intermediate Frequency
-fc=10e6;
-fs=(30)*1e6;
-signalMod=modulate(signalUp,fc,fs);
+%% Close-to-baseband simulation - Frequencies normalized in MHz 
+freqCarrier=10;
+shiftDoppler=0; % it will become the channel effect modelled in the other script;
+freqCarrierShifted=freqCarrier+shiftDoppler;
+freqSampling=30;
+freqChip=2;
+SpS=freqSampling*(1/freqChip);
+% Generation of correct upsampled signal
+signalUp=rectpulse(Code,SpS);
+% Generation of modulated signal + channel effect (Doppler shift only)
+signalMod=modulate(signalUp,freqCarrierShifted,freqSampling);
 % Autocorrelation of modulated signal
 ACF=ifft(fft(signalMod).*conj(fft(signalMod)));
 ACF=fftshift(ACF);
-ACF=abs(ACF/length(ACF));
+ACF=abs(ACF/max(ACF));
 symmInterval=round(length(ACF)/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,ACF),axis('padded');
-tit=title('Circular Auto Correlation of modulated signal');
+figure,plot(tau,ACF),grid on;
+ylim([0.88 1.02]);
+axx=xlabel('Chips');
+set(axx,'Interpreter','Latex');
+axy=ylabel('Normalized Auto Correlation');
+set(axy,'Interpreter','Latex');
+tit=title('Rx signal $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
+return
 %% Doppler shift and cross-correlation
-freqDoppler=10e+03;
-signalShift=signalMod.*exp(2i*pi*freqDoppler);
+freqDopplerTest=10e-3; % to be put inside loop
+signalLocal=signalUp.*exp(2i*pi*(freqCarrier+freqDopplerTest));
 % Do cross-correlation
-CCF=ifft(fft(signalMod).*conj(fft(signalShift)));
+CCF=ifft(fft(signalMod).*conj(fft(signalLocal)));
 CCF=fftshift(CCF);
-CCF=abs(CCF/length(CCF));
+CCF=abs(CCF/max(CCF));
 symmInterval=round(length(CCF)/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,CCF.^2),axis('padded');
+figure,plot(tau,CCF.^2);
+%ylim([0.88 1.02])
 tit=title(' Circular Cross Correlation between Rx and local replica');
 set(tit,'Interpreter','Latex');
