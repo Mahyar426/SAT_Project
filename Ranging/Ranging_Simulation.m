@@ -80,6 +80,7 @@ freqDopplerMax=10e+03;
 deltaFreq=ceil(2/(3*Tcoh));
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
 Nf=length(binsDoppler);
+return
 %% Channel model: (delay, Doppler) shifts =================================
 rng(0,'twister');
 minRange=1;

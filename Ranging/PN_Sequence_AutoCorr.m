@@ -4,6 +4,16 @@ clc
 clear
 close all
 
+%% Parameter setting for close-to-baseband simulation
+freqCarrier=10e+06;
+freqSampling=30e+06;
+freqChip=2e+06;
+SpS=freqSampling*(1/freqChip);
+shiftDoppler=0;
+freqCarrierShifted=freqCarrier+shiftDoppler;    % Channel effect on carrier frequency
+freqDopplerTest=0; % to be put inside loop
+freqTest=freqCarrier+freqDopplerTest;           % Test frequency in Acquisition stage
+
 %% Initializing circular shift registers
 C1 = [+1 -1];
 C2 = [+1 +1 +1 -1 -1 +1 -1];
@@ -62,21 +72,24 @@ tau=-2:1:2;
 figure,stem(tau,ACF(symmInterval-1:1:symmInterval+3)),axis('padded'),grid on;
 tit=title(['Upsampled code of factor ' ,num2str(nSamples), ' $\mid$ Zoom around unambiguous main peak']);
 set(tit,'Interpreter','Latex');
-%% Close-to-baseband simulation - Frequencies normalized in MHz 
-freqCarrier=10;
-% Search Space (SS) definition
-
-% Channel model (Doppler shift only)
-
-shiftDoppler=0; % it will become the channel effect modelled in the other script;
-freqCarrierShifted=freqCarrier+shiftDoppler;
-freqSampling=30;
-freqChip=2;
-SpS=freqSampling*(1/freqChip);
+%% Simulation in IF (close-to-baseband) scenario
 % Generation of correct upsampled signal
 signalUp=rectpulse(Code,SpS);
 % Generation of modulated signal + channel effect (Doppler shift only)
 signalMod=modulate(signalUp,freqCarrierShifted,freqSampling);
+% Search Space (SS) definition
+L=codeLen;
+Ts=1/freqSampling;
+Tcoh=L*Ts;
+Ntau=L;
+binsTau=0:1:Ntau-1;
+freqDopplerMax=10e+03;
+deltaFreq=ceil(2/(3*Tcoh));
+binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
+Nf=length(binsDoppler);
+% Channel model (Doppler shift only)
+
+return
 % Autocorrelation of modulated signal
 ACF=ifft(fft(signalMod).*conj(fft(signalMod)));
 ACF=fftshift(ACF);
@@ -92,17 +105,15 @@ set(axy,'Interpreter','Latex');
 tit=title('Rx signal $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
 %% Acquisition stage with CAF computation
-freqDopplerTest=0; % to be put inside loop
-freqTest=freqCarrier+freqDopplerTest;
-%signalLocal=signalUp.*exp(2i*pi*(freqCarrier+freqDopplerTest));
+%signalLocal=signalUp.*exp(2i*pi*freqTest);
 signalLocal=modulate(signalUp,freqTest,freqSampling);
-% Cross-correlation between Rx signal and local signal replica
-CCF=ifft(fft(signalMod).*conj(fft(signalLocal)));
+% Cross-correlation between Rx signal and local signal replica (TO BE CHECKED WITH 'L' POINTS)
+CCF=ifft(fft(signalMod,codeLen).*conj(fft(signalLocal,codeLen)));
 CCF=fftshift(CCF);
 CCF=abs(CCF/max(CCF));
 symmInterval=round(length(CCF)/2);
 tau=-symmInterval:1:symmInterval-1;
-figure,plot(tau,CCF.^2);
+figure,plot(tau,CCF),grid on;
 ylim([0.88 1.02]);
-tit=title(' Circular Cross Correlation between Rx signal and local replica');
+tit=title('Circular Cross Correlation between Rx signal and local replica');
 set(tit,'Interpreter','Latex');
