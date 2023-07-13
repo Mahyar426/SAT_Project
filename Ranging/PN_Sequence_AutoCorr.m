@@ -10,7 +10,7 @@ freqCarrier=(10e+06)/normFactor;
 freqSampling=(30e+06)/normFactor;
 freqChip=(2e+06)/normFactor;
 SpS=round(freqSampling*(1/freqChip));
-shiftDoppler=300;                               % Value picked in binsDoppler (see below)
+shiftDoppler=777.932974729314;                               % Value picked in binsDoppler (see below)
 freqCarrierShifted=freqCarrier+shiftDoppler;    % Channel effect on carrier frequency
 test=0;                                         % Test flag for showing plots
 %% Initializing circular shift registers
@@ -49,6 +49,14 @@ axy=ylabel('Normalized Auto Correlation');
 set(axy,'Interpreter','Latex');
 tit=title('Weighted-voting Balanced Tausworthe $\nu$=4 $\mid$ Circular Auto Correlation');
 set(tit,'Interpreter','Latex');
+% Discrete plot to fully appreciate autocorrelation behaviour
+tau=-3:1:3;
+figure,stem(tau,R_final(symmInterval-2:1:symmInterval+4)),axis('padded'),grid on;
+hold on;
+plot(tau,R_final(symmInterval-2:1:symmInterval+4),'Color',[0.8500 0.3250 0.0980]);
+% ylim([0.88 1.02]);
+title('T4B generated code $\mid$ Zoom around CAC main peak','Interpreter','Latex');
+legend('Discrete points','Continuous envelope','Interpreter','Latex');
 %% Upsampled code for plotting purposes
 nSamples=4;
 signalUp=rectpulse(Code,nSamples);
@@ -67,10 +75,13 @@ set(axy,'Interpreter','Latex');
 tit=title(['Upsampled code of factor ' ,num2str(nSamples), ' $\mid$ Circular Auto Correlation']);
 set(tit,'Interpreter','Latex');
 % Discrete plot to fully appreciate autocorrelation behaviour
-tau=-2:1:2;
-figure,stem(tau,ACF(symmInterval-1:1:symmInterval+3)),axis('padded'),grid on;
-tit=title(['Upsampled code of factor ' ,num2str(nSamples), ' $\mid$ Zoom around unambiguous main peak']);
+tau=-3:1:3;
+figure,stem(tau,ACF(symmInterval-2:1:symmInterval+4)),axis('padded'),grid on;
+hold on;
+plot(tau,ACF(symmInterval-2:1:symmInterval+4),'Color',[0.8500 0.3250 0.0980]);
+tit=title(['T4B code upsampled of a factor ' ,num2str(nSamples), ' $\mid$ Zoom around CAC main peak']);
 set(tit,'Interpreter','Latex');
+legend('Discrete points','Continuous envelope','Interpreter','Latex');
 %% Simulation in IF (close-to-baseband) scenario
 % Generation of correct upsampled signal
 signalUp=rectpulse(Code,SpS);
@@ -83,7 +94,7 @@ Tcoh=L*Ts;
 Ntau=L;
 binsTau=0:1:Ntau-1;
 freqDopplerMax=10e+03;          
-deltaFreq=ceil(2/(3*Tcoh));     % Brought to an integer value for ease
+deltaFreq=2/(3*Tcoh);     % Brought to an integer value for ease
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
 Nf=length(binsDoppler);
 %% Test plot for ACF of modulated signal
@@ -117,8 +128,8 @@ for i=1:Nf
     CCF=abs(CCF);
     CAF(i,:)=(CCF.^2)';
 end 
-CAF=CAF/max(CAF);
-%figure,surf(CAF),grid on;
+CAF=CAF./max(CAF);
+figure,surf(CAF),grid on;
 %% Test plot for single CCF
 if test==1
     freqDopplerTest=0;
