@@ -129,7 +129,7 @@ for i=1:Nf
     CAF(i,:)=(CCF.^2)';
 end 
 CAF=CAF./max(CAF);
-figure,surf(CAF),grid on;
+figure,surf(CAF(500:600,:)),grid on;
 %% Test plot for single CCF
 if test==1
     freqDopplerTest=0;
