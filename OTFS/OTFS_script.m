@@ -3,7 +3,7 @@
 clc
 clear
 close all
-
+tic;
 %% Simulation parameters
 % Rows and columns of the DD space
 M=64;
@@ -22,16 +22,17 @@ c=299792458;
 % OTFS grid delay and Doppler resolutions
 delayRes=1/(M*deltaF);
 DopplerRes=1/(N*T);
-numWrongRxBitsMax=150;
+numWrongRxBitsMax=150000;
 %% OTFS Modulator -> 4-QAM modulation + Zak transform
-for SNR_dB=0:4
+for SNR_dB=0:10
 %SNR_dB=0;
     numTxInfoBits=0;
     numWrongRxBits=0;
+    numWrongRxBitsTot=0;
     modSize=4;
     numSymbPerFrame=M*N;
     numInfoBitsPerFrame=numSymbPerFrame*log2(modSize);
-    while numWrongRxBits<numWrongRxBitsMax
+    while numWrongRxBitsTot<numWrongRxBitsMax
         infoBits=randi([0 1],numInfoBitsPerFrame,1);
         modSignal=qammod(infoBits,modSize,"gray","InputType","bit");
         % Create X matrix
@@ -101,11 +102,13 @@ for SNR_dB=0:4
         infoBits_hat=qamdemod(x_hat,modSize,'gray','OutputType','bit');
         %% Error rate computation
         numWrongRxBits=sum(xor(infoBits_hat,infoBits));
+        numWrongRxBitsTot=numWrongRxBits+numWrongRxBitsTot;
         numTxInfoBits=numTxInfoBits+length(infoBits);
     end
     %% Error rate computation
-    BER(SNR_dB+1)=numWrongRxBits/numTxInfoBits;
+    BER(SNR_dB+1)=numWrongRxBitsTot/numTxInfoBits;
 end
-SNRplot=0:4;
+SNRplot=0:10;
 semilogy(SNRplot,BER)
 grid on
+toc;
