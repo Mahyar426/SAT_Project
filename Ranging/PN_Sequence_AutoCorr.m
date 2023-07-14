@@ -10,9 +10,9 @@ freqCarrier=(10e+06)/normFactor;
 freqSampling=(30e+06)/normFactor;
 freqChip=(2e+06)/normFactor;
 SpS=round(freqSampling*(1/freqChip));
-shiftDoppler=777.932974729314;                               % Value picked in binsDoppler (see below)
+shiftDoppler=777.932974729312;                  % Value picked in binsDoppler (see below)
 freqCarrierShifted=freqCarrier+shiftDoppler;    % Channel effect on carrier frequency
-test=0;                                         % Test flag for showing plots
+test=1;                                         % Test flag for showing plots
 %% Initializing circular shift registers
 C1 = [+1 -1];
 C2 = [+1 +1 +1 -1 -1 +1 -1];
@@ -52,11 +52,9 @@ set(tit,'Interpreter','Latex');
 % Discrete plot to fully appreciate autocorrelation behaviour
 tau=-3:1:3;
 figure,stem(tau,R_final(symmInterval-2:1:symmInterval+4)),axis('padded'),grid on;
-hold on;
-plot(tau,R_final(symmInterval-2:1:symmInterval+4),'Color',[0.8500 0.3250 0.0980]);
 % ylim([0.88 1.02]);
 title('T4B generated code $\mid$ Zoom around CAC main peak','Interpreter','Latex');
-legend('Discrete points','Continuous envelope','Interpreter','Latex');
+legend('Discrete points','Interpreter','Latex');
 %% Upsampled code for plotting purposes
 nSamples=4;
 signalUp=rectpulse(Code,nSamples);
@@ -75,10 +73,10 @@ set(axy,'Interpreter','Latex');
 tit=title(['Upsampled code of factor ' ,num2str(nSamples), ' $\mid$ Circular Auto Correlation']);
 set(tit,'Interpreter','Latex');
 % Discrete plot to fully appreciate autocorrelation behaviour
-tau=-3:1:3;
-figure,stem(tau,ACF(symmInterval-2:1:symmInterval+4)),axis('padded'),grid on;
+tau=-4:1:4;
+figure,stem(tau,ACF(symmInterval-3:1:symmInterval+5)),axis('padded'),grid on;
 hold on;
-plot(tau,ACF(symmInterval-2:1:symmInterval+4),'Color',[0.8500 0.3250 0.0980]);
+plot(tau,ACF(symmInterval-3:1:symmInterval+5),'Color',[0.8500 0.3250 0.0980]);
 tit=title(['T4B code upsampled of a factor ' ,num2str(nSamples), ' $\mid$ Zoom around CAC main peak']);
 set(tit,'Interpreter','Latex');
 legend('Discrete points','Continuous envelope','Interpreter','Latex');
@@ -88,13 +86,13 @@ signalUp=rectpulse(Code,SpS);
 % Generation of modulated signal + channel effect (Doppler shift only)
 signalMod=modulate(signalUp,freqCarrierShifted,freqSampling);
 % Search Space (SS) definition
-L=codeLen;
+L=codeLen*SpS;
 Ts=1/freqSampling;
 Tcoh=L*Ts;
 Ntau=L;
 binsTau=0:1:Ntau-1;
 freqDopplerMax=10e+03;          
-deltaFreq=2/(3*Tcoh);     % Brought to an integer value for ease
+deltaFreq=2/(3*Tcoh);     
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
 Nf=length(binsDoppler);
 %% Test plot for ACF of modulated signal
@@ -114,29 +112,33 @@ if test==1
     set(tit,'Interpreter','Latex');
 end
 %% Acquisition stage with CAF computation
-CAF=zeros(Nf,Ntau);
-for i=1:Nf
+% CAF=zeros(Nf,Ntau);
+CAF=[];
+for i=8141:8181
     % Test frequency in Acquisition stage
     freqDopplerTest=binsDoppler(i); 
     freqTest=freqCarrier+freqDopplerTest;
     % Generate the local test replica
-    % signalLocal=signalUp.*exp(2i*pi*freqTest);
     signalLocal=modulate(signalUp,freqTest,freqSampling);
     % Cross-correlation between Rx signal and local replica
-    CCF=ifft(fft(signalMod,codeLen).*conj(fft(signalLocal,codeLen)));
+    CCF=ifft(fft(signalMod).*conj(fft(signalLocal)));
     CCF=fftshift(CCF);
     CCF=abs(CCF);
-    CAF(i,:)=(CCF.^2)';
+    CAF(i-8140,:)=(CCF.^2)';
 end 
 CAF=CAF./max(CAF);
-figure,surf(CAF(500:600,:)),grid on;
+%% Plotting CAF in portions of SS
+symmInterval=round(length(CAF)/2);
+figure,surf(CAF(:,symmInterval-10:symmInterval+12)),grid on;
+figure,surf(CAF(:,symmInterval-10:symmInterval+12)),grid on;
+view(2);
 %% Test plot for single CCF
 if test==1
-    freqDopplerTest=0;
+    freqDopplerTest=777.932974729312;
     freqTest=freqCarrier+freqDopplerTest;
     signalLocal=modulate(signalUp,freqTest,freqSampling);
     % Cross-correlation between Rx signal and local signal replica
-    CCF=ifft(fft(signalMod,codeLen).*conj(fft(signalLocal,codeLen)));
+    CCF=ifft(fft(signalMod).*conj(fft(signalLocal)));
     CCF=fftshift(CCF);
     CCF=abs(CCF/max(CCF));
     symmInterval=round(length(CCF)/2);
