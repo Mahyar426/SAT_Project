@@ -1,10 +1,10 @@
-% Code for regenerative Pseudo-Noise sequence (T4B)
+% Simulation of GNSS receiver acquisition stage 
 
 clc
 clear
 close all
 
-%% Parameters setting for close-to-baseband simulation
+%% Parameters setting simulation
 normFactor=1e+00;
 freqCarrier=(10e+06)/normFactor;
 freqSampling=(30e+06)/normFactor;
@@ -35,7 +35,7 @@ while counter<=codeLen
     C6 = circshift(C6,1);
     counter=counter+1;
 end
-%% Plotting normalized circular autocorrelation
+%% Plotting normalized ACF
 R=ifft(fft(Code).*conj(fft(Code)));
 R_shifted=fftshift(R);
 R_final=abs(R_shifted/codeLen);
@@ -55,7 +55,7 @@ figure,stem(tau,R_final(symmInterval-2:1:symmInterval+4)),axis('padded'),grid on
 % ylim([0.88 1.02]);
 title('T4B generated code $\mid$ Zoom around CAC main peak','Interpreter','Latex');
 legend('Discrete points','Interpreter','Latex');
-%% Upsampled code for plotting purposes
+%% Upsampled code for plots
 nSamples=4;
 signalUp=rectpulse(Code,nSamples);
 % Autocorrelation of upsampled signal
@@ -80,7 +80,7 @@ plot(tau,ACF(symmInterval-3:1:symmInterval+5),'Color',[0.8500 0.3250 0.0980]);
 tit=title(['T4B code upsampled of a factor ' ,num2str(nSamples), ' $\mid$ Zoom around CAC main peak']);
 set(tit,'Interpreter','Latex');
 legend('Discrete points','Continuous envelope','Interpreter','Latex');
-%% Simulation in IF (close-to-baseband) scenario
+%% IF Simulation (close-to-baseband)
 % Generation of correct upsampled signal
 signalUp=rectpulse(Code,SpS);
 % Generation of modulated signal + channel effect (Doppler shift only)
@@ -95,7 +95,7 @@ freqDopplerMax=10e+03;
 deltaFreq=2/(3*Tcoh);     
 binsDoppler=-freqDopplerMax:deltaFreq:freqDopplerMax;
 Nf=length(binsDoppler);
-%% Test plot for ACF of modulated signal
+%% Test: signalMod ACF
 if test==1
     ACF=ifft(fft(signalMod).*conj(fft(signalMod)));
     ACF=fftshift(ACF);
@@ -111,7 +111,7 @@ if test==1
     tit=title('Rx signal $\mid$ Circular Auto Correlation');
     set(tit,'Interpreter','Latex');
 end
-%% Acquisition stage with CAF computation
+%% Acquisition stage main loop
 % Peak is expected to be in position 8161 in binsDoppler
 peakPos=8161;
 % Compute CAF in the portion of the Search Space where
@@ -134,7 +134,7 @@ end
 % Normalize CAF and bring it in [0,1] range
 CAF_Peak=CAF_Peak./length(CAF_Peak);
 CAF_Peak=CAF_Peak./4e6;
-%% Plotting CAF in the analyzed SS portion - Different views
+%% CAF plots - Different views
 % Plot the Peak
 symmInterval=round(length(CAF_Peak)/2);
 figure,surf(CAF_Peak(:,symmInterval-10:symmInterval+12)),grid on;
@@ -148,7 +148,7 @@ colormap turbo,view(2);
 title('View from above $\mid$ Cross-Ambiguity Function','Interpreter','latex');
 xlabel('Delay bins','Interpreter','latex');
 ylabel('Doppler bins','Interpreter','latex');
-%% Test plot for single CCF
+%% Test: single CCF
 if test==1
     freqDopplerTest=777.932974729312;
     freqTest=freqCarrier+freqDopplerTest;
