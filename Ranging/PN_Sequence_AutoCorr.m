@@ -118,6 +118,7 @@ peakPos=8161;
 % we expect to find the match in Doppler shift
 CAF_Peak=zeros(41,length(signalMod));
 for i=peakPos-20:peakPos+20
+% for i=1:100
     % Test frequency in Acquisition stage
     freqDopplerTest=binsDoppler(i); 
     freqTest=freqCarrier+freqDopplerTest;
@@ -128,6 +129,7 @@ for i=peakPos-20:peakPos+20
     CCF=fftshift(CCF);
     CCF=abs(CCF);
     CAF_Peak(i-(peakPos-21),:)=(CCF.^2)';
+%     CAF_Peak(i,:)=(CCF.^2)';
 end 
 % Normalize CAF and bring it in [0,1] range
 CAF_Peak=CAF_Peak./length(CAF_Peak);
@@ -137,7 +139,7 @@ CAF_Peak=CAF_Peak./4e6;
 symmInterval=round(length(CAF_Peak)/2);
 figure,surf(CAF_Peak(:,symmInterval-10:symmInterval+12)),grid on;
 colormap turbo; 
-colorbar,view(-220,21);
+colorbar,view(134,21);
 xlabel('Delay bins','Interpreter','latex');
 ylabel('Doppler bins','Interpreter','latex');
 title('Rx signal and local replica $\mid$ Cross-Ambiguity Function $\mid$ Peak','Interpreter','latex');
