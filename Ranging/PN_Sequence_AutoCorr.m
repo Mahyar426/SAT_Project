@@ -12,7 +12,7 @@ freqChip=(2e+06)/normFactor;
 SpS=round(freqSampling*(1/freqChip));
 shiftDoppler=777.932974729312;                  % Value picked in binsDoppler (see below)
 freqCarrierShifted=freqCarrier+shiftDoppler;    % Channel effect on carrier frequency
-test=1;                                         % Test flag for showing plots
+test=0;                                         % Test flag for showing plots
 %% Initializing circular shift registers
 C1 = [+1 -1];
 C2 = [+1 +1 +1 -1 -1 +1 -1];
@@ -112,9 +112,12 @@ if test==1
     set(tit,'Interpreter','Latex');
 end
 %% Acquisition stage with CAF computation
-% CAF=zeros(Nf,Ntau);
-CAF=[];
-for i=8141:8181
+% Peak is expected to be in position 8161 in binsDoppler
+peakPos=8161;
+% Compute CAF in the portion of the Search Space where
+% we expect to find the match in Doppler shift
+CAF_Peak=zeros(41,length(signalMod));
+for i=peakPos-20:peakPos+20
     % Test frequency in Acquisition stage
     freqDopplerTest=binsDoppler(i); 
     freqTest=freqCarrier+freqDopplerTest;
@@ -124,14 +127,25 @@ for i=8141:8181
     CCF=ifft(fft(signalMod).*conj(fft(signalLocal)));
     CCF=fftshift(CCF);
     CCF=abs(CCF);
-    CAF(i-8140,:)=(CCF.^2)';
+    CAF_Peak(i-(peakPos-21),:)=(CCF.^2)';
 end 
-CAF=CAF./max(CAF);
-%% Plotting CAF in portions of SS
-symmInterval=round(length(CAF)/2);
-figure,surf(CAF(:,symmInterval-10:symmInterval+12)),grid on;
-figure,surf(CAF(:,symmInterval-10:symmInterval+12)),grid on;
-view(2);
+% Normalize CAF and bring it in [0,1] range
+CAF_Peak=CAF_Peak./length(CAF_Peak);
+CAF_Peak=CAF_Peak./4e6;
+%% Plotting CAF in the analyzed SS portion - Different views
+% Plot the Peak
+symmInterval=round(length(CAF_Peak)/2);
+figure,surf(CAF_Peak(:,symmInterval-10:symmInterval+12)),grid on;
+colormap turbo; 
+colorbar,view(-220,21);
+xlabel('Delay bins','Interpreter','latex');
+ylabel('Doppler bins','Interpreter','latex');
+title('Rx signal and local replica $\mid$ Cross-Ambiguity Function $\mid$ Peak','Interpreter','latex');
+figure,surf(CAF_Peak(:,symmInterval-10:symmInterval+12)),grid on;
+colormap turbo,view(2);
+title('View from above $\mid$ Cross-Ambiguity Function','Interpreter','latex');
+xlabel('Delay bins','Interpreter','latex');
+ylabel('Doppler bins','Interpreter','latex');
 %% Test plot for single CCF
 if test==1
     freqDopplerTest=777.932974729312;
