@@ -4,7 +4,7 @@ clc
 clear
 close all
 
-%% Parameters setting simulation
+%% Parameters setting
 normFactor=1e+00;
 freqCarrier=(10e+06)/normFactor;
 freqSampling=(30e+06)/normFactor;
@@ -12,7 +12,7 @@ freqChip=(2e+06)/normFactor;
 SpS=round(freqSampling*(1/freqChip));
 shiftDoppler=777.932974729312;                  % Value picked in binsDoppler (see below)
 freqCarrierShifted=freqCarrier+shiftDoppler;    % Channel effect on carrier frequency
-test=0;                                         % Test flag for showing plots
+test=1;                                         % Test flag for showing plots
 %% Initializing circular shift registers
 C1 = [+1 -1];
 C2 = [+1 +1 +1 -1 -1 +1 -1];
@@ -85,6 +85,10 @@ legend('Discrete points','Continuous envelope','Interpreter','Latex');
 signalUp=rectpulse(Code,SpS);
 % Generation of modulated signal + channel effect (Doppler shift only)
 signalMod=modulate(signalUp,freqCarrierShifted,freqSampling);
+% Adding WGN to the signal, see 'std' derivation in V2 report
+sigma=1.45e-7;
+AWGN=sigma*randn(length(signalMod),1);
+signalMod=signalMod+AWGN;
 % Search Space (SS) definition
 L=codeLen*SpS;
 Ts=1/freqSampling;
