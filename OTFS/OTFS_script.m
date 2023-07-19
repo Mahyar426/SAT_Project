@@ -1,8 +1,9 @@
 % Script for performance evaluation of OTFS
+
 clc
 clear
 close all
-tic;
+
 %% Simulation parameters
 % Rows and columns of the DD space
 M=64;
@@ -25,12 +26,12 @@ numWrongRxBitsMax=15000;
 data_grid=zeros(M,N);
 M_data=M-M/N;
 data_grid(1:M_data,1:N)=1;
-LengthPlot=15;
+LengthPlot=10;
 modSize=4;
 numSymbPerFrame=M*N;
 numInfoBitsPerFrame=numSymbPerFrame*log2(modSize);
 %% OTFS Modulator -> 4-QAM modulation + Zak transform
-NFrame=1000;
+NFrame=10000;
 numWrongRxBitsTot=zeros(1,LengthPlot+1);
 for SNR_dB=0:5:LengthPlot
     numTxInfoBits=0;
@@ -113,10 +114,10 @@ for SNR_dB=0:5:LengthPlot
         numWrongRxBitsTot(SNR_dB+1)=numWrongRxBits+numWrongRxBitsTot(SNR_dB+1);
         numTxInfoBits=numTxInfoBits+length(infoBits);
     end
-    %% Error rate computation
 end
 BER=numWrongRxBitsTot/numTxInfoBits;
 SNRplot=0:5:LengthPlot;
-semilogy(SNRplot,BER)
-grid on
-toc;
+semilogy(SNRplot,BER),grid on;
+xlabel('SNR''Interpreter','latex');
+ylabel('Bit Error Rate','Interpreter','latex');
+title('OTFS performance','Interpreter','latex');
