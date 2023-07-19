@@ -12,7 +12,13 @@ freqChip=(2e+06)/normFactor;
 SpS=round(freqSampling*(1/freqChip));
 shiftDoppler=777.932974729312;                  % Value picked in binsDoppler (see below)
 freqCarrierShifted=freqCarrier+shiftDoppler;    % Channel effect on carrier frequency
-test=1;                                         % Test flag for showing plots
+test=0;                                         % Test flag for showing plots
+% Noise model
+SNR_dB=-5;          % >= -10 dBHz
+SNR_linear=10^(SNR_dB/10);
+kb=1.38e-23;        % Boltzmann constant J/K
+tempOp=191.50;      % From Rx antenna case study values 
+No=kb*tempOp;       % Noise spectral density
 %% Initializing circular shift registers
 C1 = [+1 -1];
 C2 = [+1 +1 +1 -1 -1 +1 -1];
@@ -86,7 +92,11 @@ signalUp=rectpulse(Code,SpS);
 % Generation of modulated signal + channel effect (Doppler shift only)
 signalMod=modulate(signalUp,freqCarrierShifted,freqSampling);
 % Adding WGN to the signal, see 'std' derivation in V2 report
-sigma=1.45e-7;
+B=freqSampling;
+% Energy of the signal
+C=SNR_linear*No*B;
+% Noise std
+sigma=sqrt(No*B);
 AWGN=sigma*randn(length(signalMod),1);
 signalMod=signalMod+AWGN;
 % Search Space (SS) definition
@@ -122,7 +132,7 @@ peakPos=8161;
 % we expect to find the match in Doppler shift
 CAF_Peak=zeros(41,length(signalMod));
 for i=peakPos-20:peakPos+20
-% for i=1:100
+% for i=1:41
     % Test frequency in Acquisition stage
     freqDopplerTest=binsDoppler(i); 
     freqTest=freqCarrier+freqDopplerTest;
@@ -142,11 +152,13 @@ CAF_Peak=CAF_Peak./4e6;
 % Plot the Peak
 symmInterval=round(length(CAF_Peak)/2);
 figure,surf(CAF_Peak(:,symmInterval-10:symmInterval+12)),grid on;
+% figure,surf(CAF_Peak(:,1:41)),grid on;
 colormap turbo; 
 colorbar,view(134,21);
+% colorbar,view(-44,28);
 xlabel('Delay bins','Interpreter','latex');
 ylabel('Doppler bins','Interpreter','latex');
-title('Rx signal and local replica $\mid$ Cross-Ambiguity Function $\mid$ Peak','Interpreter','latex');
+title('Rx signal and local replica $\mid$ Cross-Ambiguity Function $\mid$ Floor','Interpreter','latex');
 figure,surf(CAF_Peak(:,symmInterval-10:symmInterval+12)),grid on;
 colormap turbo,view(2);
 title('View from above $\mid$ Cross-Ambiguity Function','Interpreter','latex');
