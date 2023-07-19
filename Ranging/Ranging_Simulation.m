@@ -92,9 +92,9 @@ signalUp=rectpulse(Code,SpS);
 % Generation of modulated signal + channel effect (Doppler shift only)
 signalMod=modulate(signalUp,freqCarrierShifted,freqSampling);
 % Adding WGN to the signal, see 'std' derivation in V2 report
-B=freqSampling;
-% Energy of the signal
-C=SNR_linear*No*B;
+B=freqChip;
+% Energy of the signal in bandpass (factor 2 wrt baseband)
+C=2*SNR_linear*No*B;
 % Noise std
 sigma=sqrt(No*B);
 AWGN=sigma*randn(length(signalMod),1);
