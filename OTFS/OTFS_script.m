@@ -25,14 +25,14 @@ numWrongRxBitsMax=15000;
 data_grid=zeros(M,N);
 M_data=M-M/N;
 data_grid(1:M_data,1:N)=1;
-LengthPlot=15;
+LengthPlot=10;
 modSize=4;
 numSymbPerFrame=M*N;
 numInfoBitsPerFrame=numSymbPerFrame*log2(modSize);
 %% OTFS Modulator -> 4-QAM modulation + Zak transform
-NFrame=1000;
-numWrongRxBitsTot=zeros(1,LengthPlot+1);
-for SNR_dB=0:5:LengthPlot
+NFrame=5000;
+numWrongRxBitsTot=zeros(1,11);
+for SNR_dB=0:LengthPlot
     numTxInfoBits=0;
     for Iframe=1:NFrame
         %while numWrongRxBitsTot<numWrongRxBitsMax
@@ -116,7 +116,15 @@ for SNR_dB=0:5:LengthPlot
     %% Error rate computation
 end
 BER=numWrongRxBitsTot/numTxInfoBits;
-SNRplot=0:5:LengthPlot;
-semilogy(SNRplot,BER)
+SNRplot=0:LengthPlot;
+semilogy(SNRplot,BER,'-x','LineWidth',2,'MarkerSize',5)
 grid on
+axx=xlabel('$SNR$');
+set(axx,'Interpreter','Latex');
+axy=ylabel('Bit Error Rate');
+set(axy,'Interpreter','Latex');
+tit=title('OTFS');
+set(tit,'Interpreter','Latex');
+leg=legend('BER');
+set(leg,'Interpreter','Latex');
 toc;
