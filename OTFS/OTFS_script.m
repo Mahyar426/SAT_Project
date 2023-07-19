@@ -31,8 +31,8 @@ numSymbPerFrame=M*N;
 numInfoBitsPerFrame=numSymbPerFrame*log2(modSize);
 %% OTFS Modulator -> 4-QAM modulation + Zak transform
 NFrame=5000;
-numWrongRxBitsTot=zeros(1,11);
-for SNR_dB=0:LengthPlot
+numWrongRxBitsTot=zeros(1,3);
+for SNR_dB=0:5:LengthPlot
     numTxInfoBits=0;
     for Iframe=1:NFrame
         %while numWrongRxBitsTot<numWrongRxBitsMax
@@ -110,13 +110,13 @@ for SNR_dB=0:LengthPlot
         %[est_bits,x_data] = Block_LMMSE_detector(N,M,modSize,sigma_w2,data_grid,r,gs,L_set);
         %% Error rate computation
         numWrongRxBits=sum(xor(infoBits_hat,infoBits));
-        numWrongRxBitsTot(SNR_dB+1)=numWrongRxBits+numWrongRxBitsTot(SNR_dB+1);
+        numWrongRxBitsTot(SNR_dB/5+1)=numWrongRxBits+numWrongRxBitsTot(SNR_dB/5+1);
         numTxInfoBits=numTxInfoBits+length(infoBits);
     end
     %% Error rate computation
 end
 BER=numWrongRxBitsTot/numTxInfoBits;
-SNRplot=0:LengthPlot;
+SNRplot=0:5:LengthPlot;
 semilogy(SNRplot,BER,'-x','LineWidth',2,'MarkerSize',5)
 grid on
 axx=xlabel('$SNR$');
