@@ -117,7 +117,7 @@ for SNR_dB=0:5:LengthPlot
 end
 BER=numWrongRxBitsTot/numTxInfoBits;
 SNRplot=0:5:LengthPlot;
-semilogy(SNRplot,BER),grid on;
+semilogy(SNRplot,BER,'-ob'),grid on;
 xlabel('SNR''Interpreter','latex');
 ylabel('Bit Error Rate','Interpreter','latex');
 title('OTFS performance','Interpreter','latex');
